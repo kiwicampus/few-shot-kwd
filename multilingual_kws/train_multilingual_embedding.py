@@ -1,20 +1,14 @@
+import glob
+import logging
 import os
 import pickle
-
-import logging
-import glob
-import numpy as np
-import tensorflow as tf
-
-from tensorflow.keras import layers
-from tensorflow.keras import models
-
 import sys
+from pathlib import Path
 
 import input_data
-
-from pathlib import Path
-import pickle
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
 
 embedding_model_dir = Path("/home/mark/tinyspeech_harvard/multilingual_embedding_wc")
 save_models_dir = embedding_model_dir / "models"
@@ -97,16 +91,16 @@ checkpoint = save_models_dir / "multilingual_context_.020-0.7058"
 model = models.load_model(checkpoint)
 # # change learning rate:
 model.compile(
-   #optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), #<-- change learning rate!
-   optimizer=tf.keras.optimizers.Adam(), #<-- change learning rate!
-   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-   metrics=["accuracy"],
+    # optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), #<-- change learning rate!
+    optimizer=tf.keras.optimizers.Adam(),  # <-- change learning rate!
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=["accuracy"],
 )
 
 # CHANGE FILENAME
 EPOCHS = 8
 os.chdir(save_models_dir)
-basename="multilingual_context_resume20_"
+basename = "multilingual_context_resume20_"
 checkpoint_filepath = basename + ".{epoch:03d}-{val_accuracy:.4f}"
 
 log_idx = 0

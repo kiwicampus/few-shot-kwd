@@ -1,25 +1,25 @@
+import glob
+import logging
 import os
 import pickle
+import sys
+from pathlib import Path
 
-import logging
-import glob
 import numpy as np
 import tensorflow as tf
+from python_path import PythonPath
+from tensorflow.keras import layers, models
 
-from tensorflow.keras import layers
-from tensorflow.keras import models
-
-import sys
-
-sys.path.insert(0, "/home/mark/tinyspeech_harvard/tinyspeech/")
-import input_data
-
-from pathlib import Path
-import pickle
+with PythonPath("..", relative_to=__file__):
+    from data_pipeline import (
+        AudioDataset,
+        SpecAugParams,
+        standard_microspeech_model_settings,
+    )
 
 LANG_ISOCODE = "nl"
-embedding_model_dir=f"/home/mark/tinyspeech_harvard/train_{LANG_ISOCODE}_165/"
-save_models_dir=f"/home/mark/tinyspeech_harvard/train_{LANG_ISOCODE}_165/models/"
+embedding_model_dir = f"/home/mark/tinyspeech_harvard/train_{LANG_ISOCODE}_165/"
+save_models_dir = f"/home/mark/tinyspeech_harvard/train_{LANG_ISOCODE}_165/models/"
 data_dir = Path(f"/home/mark/tinyspeech_harvard/frequent_words/{LANG_ISOCODE}/clips/")
 os.chdir(embedding_model_dir)
 
@@ -44,7 +44,7 @@ with open("test_files.txt", "r") as fh:
     test_files = fh.read().splitlines()
 
 
-model_settings = input_data.standard_microspeech_model_settings(label_count=166)
+model_settings = standard_microspeech_model_settings(label_count=166)
 bg_datadir = (
     f"/home/mark/tinyspeech_harvard/frequent_words/{LANG_ISOCODE}/_background_noise_/"
 )
@@ -52,13 +52,13 @@ bg_datadir = (
 if not os.path.isdir(bg_datadir):
     raise ValueError("no bg data at", bg_datadir)
 
-a = input_data.AudioDataset(
+a = AudioDataset(
     model_settings,
     commands,
     bg_datadir,
     [],
     unknown_percentage=0,
-    spec_aug_params=input_data.SpecAugParams(percentage=80),
+    spec_aug_params=SpecAugParams(percentage=80),
 )
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 train_ds = a.init_from_parent_dir(AUTOTUNE, train_files, is_training=True)
@@ -67,7 +67,6 @@ val_ds = a.init_from_parent_dir(AUTOTUNE, val_files, is_training=False)
 batch_size = 64
 train_ds = train_ds.shuffle(buffer_size=4000).batch(batch_size)
 val_ds = val_ds.batch(batch_size)
-
 
 
 input_shape = (49, 40, 1)

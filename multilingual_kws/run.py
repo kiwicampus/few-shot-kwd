@@ -1,25 +1,45 @@
+import csv
+import glob
+import json
+import multiprocessing
 import os
-from typing import Optional, List, Dict
+import shlex
+import shutil
+import subprocess
 import tempfile
 from pathlib import Path
-import shutil
-import shlex
-import subprocess
-import multiprocessing
-import json
-import glob
-import csv
+from typing import Dict, List, Optional
 
 import fire
+from python_path import PythonPath
 
-from multilingual_kws.embedding import input_data
-from multilingual_kws.embedding import batch_streaming_analysis as sa
-from multilingual_kws.embedding import transfer_learning
-from multilingual_kws.embedding.tpr_fpr import tpr_fpr, get_groundtruth
+with PythonPath("..", relative_to=__file__):
+    from benchmarking.batch_streaming_analysis import StreamTarget, eval_stream_test
+    from benchmarking.tpr_fpr import get_groundtruth, tpr_fpr
+    from data_pipeline import (
+        AudioDataset,
+        SpecAugParams,
+        standard_microspeech_model_settings,
+    )
+    from transfer_learning import (
+        create_embedding_model,
+        create_fewshot_model,
+        create_finetuning_model,
+    )
 
 
-def eval(streamtarget: sa.StreamTarget, results: Dict):
-    results.update(sa.eval_stream_test(streamtarget))
+def eval_target(streamtarget: StreamTarget, results: Dict):
+    """
+    Evaluate the stream target and update the results dictionary.
+
+    Args:
+        streamtarget (StreamTarget): The stream target to evaluate.
+        results (Dict): The dictionary to update with the evaluation results.
+
+    Returns:
+        None
+    """
+    results.update(eval_stream_test(streamtarget))
 
 
 def inference(
@@ -108,7 +128,7 @@ def inference(
         # TODO(mmaz): note that the summary tpr/fpr calculated within eval is incorrect when multiple
         # targets are being evaluated - groundtruth_labels.txt contains multiple targets but
         # each model is only single-target (at the moment)
-        p = multiprocessing.Process(target=eval, args=(streamtarget, results))
+        p = multiprocessing.Process(target=eval_target, args=(streamtarget, results))
         p.start()
         p.join()
 

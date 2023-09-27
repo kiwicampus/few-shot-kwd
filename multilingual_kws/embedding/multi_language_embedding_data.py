@@ -1,24 +1,27 @@
-# %%
-import numpy as np
-import os
-import shutil
-import glob
-import pandas as pd
-import matplotlib.pyplot as plt
-import subprocess
-import seaborn as sns
-from typing import Set, List, Dict
-import functools
-from collections import Counter, OrderedDict
-import csv
-import pathlib
-import textgrid
-import sox
-from pathlib import Path
-import pickle
-import multiprocessing
+"""
+This file contains the data pipeline for the multi-language embedding model.
+"""
 
-import word_extraction
+# %%
+import csv
+import functools
+import glob
+import multiprocessing
+import os
+import pathlib
+import pickle
+import shutil
+import subprocess
+from collections import Counter, OrderedDict
+from pathlib import Path
+from typing import Dict, List, Set
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import sox
+import textgrid
 
 sns.set()
 sns.set_palette("bright")
@@ -63,7 +66,7 @@ dup_word = "entre"
 commands = []
 for lang, commands_worddirs in per_lang.items():
     print(lang)
-    for (command, worddir) in commands_worddirs:
+    for command, worddir in commands_worddirs:
         if command == dup_word:
             print("---------------------*****", lang, dup_word)
         if command in commands:
@@ -89,7 +92,7 @@ os.chdir(data_dest)
 # %%
 commands = []
 for lang, commands_worddirs in per_lang.items():
-    for (command, worddir) in commands_worddirs:
+    for command, worddir in commands_worddirs:
         commands.append(command)
 
 print("num commands", len(commands))
@@ -102,7 +105,7 @@ train_val_data = {}
 VALIDATION_FRAC = 0.1
 
 for lang, commands_worddirs in per_lang.items():
-    for (command, worddir) in commands_worddirs:
+    for command, worddir in commands_worddirs:
         all_wavs = glob.glob(str(worddir / "*.wav"))
         utterances = np.random.choice(all_wavs, size=NUM_WAVS, replace=False)
 
@@ -192,11 +195,21 @@ for f in train_files:
 v_sz_bytes = 0
 for f in val_files:
     v_sz_bytes += Path(f).stat().st_size
-print("train gb", t_sz_bytes / 1024 ** 3, "val gb", v_sz_bytes / 1024 ** 3)
+print("train gb", t_sz_bytes / 1024**3, "val gb", v_sz_bytes / 1024**3)
+
 
 # %%
 # create dataset using hyperion with silence padding + context padding
 def find_and_combine(training_sample):
+    """
+    Find and combine the training sample with silence padding and context padding.
+
+    Args:
+        training_sample (str): The path to the training sample.
+
+    Returns:
+        list: A list of file paths that are the result of combining the training sample with silence padding and context padding.
+    """
     result = []
 
     fw = Path(

@@ -1,31 +1,38 @@
 # based on https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/speech_commands/test_streaming_accuracy.py
 
-#%%
-from dataclasses import dataclass
-import logging
+# %%
 import datetime
-import os
-import multiprocessing
-import pickle
 import glob
+import logging
+import multiprocessing
+import os
+import pickle
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
+import multilingual_kws.embedding.input_data as input_data
 import numpy as np
 import tensorflow as tf
-
-
-import multilingual_kws.embedding.input_data as input_data
 from multilingual_kws.embedding.accuracy_utils import StreamingAccuracyStats
 from multilingual_kws.embedding.single_target_recognize_commands import (
-    SingleTargetRecognizeCommands,
     RecognizeResult,
+    SingleTargetRecognizeCommands,
 )
+
 
 # %%
 @dataclass(frozen=True)
 class StreamFlags:
+    """
+    Represents the flags for streaming analysis.
+
+    Attributes:
+        wav (os.PathLike): The path to the WAV file.
+        ground_truth (os.PathLike): The path to the ground truth file.
+    """
+
     wav: os.PathLike
     ground_truth: os.PathLike
     target_keyword: str
@@ -37,9 +44,14 @@ class StreamFlags:
     suppression_ms: int = 500
     time_tolerance_ms: int = 750
     minimum_count: int = 4
-    max_chunk_length_sec: int = 1200  # max chunk length is 1200 seconds (20 minutes) by default
+    max_chunk_length_sec: int = (
+        1200  # max chunk length is 1200 seconds (20 minutes) by default
+    )
 
     def labels(self) -> List[str]:
+        """
+        Returns the list of labels used in the keyword detection.
+        """
         return [
             input_data.SILENCE_LABEL,
             input_data.UNKNOWN_WORD_LABEL,
@@ -50,6 +62,20 @@ class StreamFlags:
 def calculate_streaming_accuracy(
     model, model_settings, flag_list, existing_inferences=None
 ):
+    """
+    Calculate the streaming accuracy of a model based on the provided flags.
+
+    Args:
+        model: The model used for streaming accuracy calculation.
+        model_settings: The settings of the model.
+        flag_list: A list of flags containing the necessary information for streaming accuracy calculation.
+        existing_inferences: Optional. Existing inferences to be used instead of calculating new ones.
+
+    Returns:
+        results: A list of results for each flag in flag_list.
+        inferences: The calculated inferences.
+
+    """
     assert len(set([f.wav for f in flag_list])) == 1, "can only process one wav"
     assert len(set([f.clip_duration_ms for f in flag_list])) == 1, "cannot vary"
     assert len(set([f.clip_stride_ms for f in flag_list])) == 1, "cannot vary"
@@ -186,6 +212,14 @@ def calculate_streaming_accuracy(
 
 @dataclass
 class StreamTarget:
+    """
+    Represents a stream target for streaming analysis.
+
+    Attributes:
+        target_lang (str): The target language.
+        target_word (str): The target word.
+    """
+
     target_lang: str
     target_word: str
     model_path: os.PathLike
@@ -195,6 +229,16 @@ class StreamTarget:
 
 
 def eval_stream_test(st: StreamTarget, live_model=None):
+    """
+    Evaluate the streaming test using the given StreamTarget and live_model.
+
+    Args:
+        st (StreamTarget): The StreamTarget object containing the necessary information for the streaming test.
+        live_model (optional): The live model to be used for evaluation.
+
+    Returns:
+        None
+    """
     if live_model is not None:
         model = live_model
     else:
@@ -231,9 +275,7 @@ def eval_stream_test(st: StreamTarget, live_model=None):
         with open(st.destination_result_pkl, "wb") as fh:
             pickle.dump(results, fh)
     if not inferences_exist and st.destination_result_inferences is not None:
-        print(
-            "SAVING inferences TO\n", st.destination_result_inferences, flush=True
-        )
+        print("SAVING inferences TO\n", st.destination_result_inferences, flush=True)
         np.save(st.destination_result_inferences, inferences)
 
     # https://keras.io/api/utils/backend_utils/
@@ -242,6 +284,14 @@ def eval_stream_test(st: StreamTarget, live_model=None):
 
 
 def batch_streaming_analysis():
+    """
+    Perform batch streaming analysis.
+
+    This function processes batch data for streaming analysis. It initializes a list to store the data to be processed and performs the necessary operations on the data.
+
+    Returns:
+        None
+    """
     batch_data_to_process = []
 
     # fmt: off

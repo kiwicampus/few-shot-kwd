@@ -1,14 +1,14 @@
-import os
+import glob
 import logging
+import os
 from typing import Dict, List, Optional
 
-import glob
 import numpy as np
 import tensorflow as tf
+from python_path import PythonPath
 
-import sys
-
-import multilingual_kws.embedding.input_data as input_data
+with PythonPath("..", relative_to=__file__):
+    from data_pipeline import AudioDataset, SpecAugParams, file2spec
 
 
 def transfer_learn(
@@ -59,13 +59,13 @@ def transfer_learn(
     )
 
     # TODO(mmaz): use keras class weights?
-    audio_dataset = input_data.AudioDataset(
+    audio_dataset = AudioDataset(
         model_settings=model_settings,
         commands=[target],
         background_data_dir=bg_datadir,
         unknown_files=unknown_files,
         unknown_percentage=UNKNOWN_PERCENTAGE,
-        spec_aug_params=input_data.SpecAugParams(percentage=80),
+        spec_aug_params=SpecAugParams(percentage=80),
     )
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
@@ -139,6 +139,16 @@ def random_sample_transfer_models(
     NUM_BATCHES=1,
     bg_datadir="/home/mark/tinyspeech_harvard/frequent_words/en/clips/_background_noise_/",
 ):
+    """
+    Randomly samples transfer models.
+
+    Args:
+        NUM_MODELS (int): The number of models to sample.
+        N_SHOTS (int): The number of shots.
+
+    Returns:
+        None
+    """
     assert os.path.isdir(dest_dir), f"dest dir {dest_dir} not found"
     models = np.random.choice(oov_words, NUM_MODELS, replace=False)
 
@@ -182,6 +192,16 @@ def evaluate_fast_multiclass(
     model: tf.keras.Model,
     model_settings: Dict,
 ):
+    """
+    Evaluate the performance of a multiclass model on a list of words.
+
+    Args:
+        words_to_evaluate (List[str]): The list of words to evaluate.
+        target_id (int): The target class ID.
+
+    Returns:
+        dict: A dictionary containing the correct and incorrect confidences.
+    """
     correct_confidences = []
     incorrect_confidences = []
 
@@ -193,7 +213,7 @@ def evaluate_fast_multiclass(
         else:
             print("using all wavs for ", word)
             fs = wavs
-        specs.extend([input_data.file2spec(model_settings, f) for f in fs])
+        specs.extend([file2spec(model_settings, f) for f in fs])
     specs = np.array(specs)
     preds = model.predict(np.expand_dims(specs, -1))
 
@@ -221,6 +241,16 @@ def evaluate_fast_single_target(
     model: tf.keras.Model,
     model_settings: Dict,
 ):
+    """
+    Evaluate the performance of a single-target model on a list of words.
+
+    Args:
+        words_to_evaluate (List[str]): The list of words to evaluate.
+        target_id (int): The target class ID.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: A tuple containing the predictions for the target class and all predictions.
+    """
     specs = []
     for word in words_to_evaluate:
         wavs = glob.glob(data_dir + word + "/*.wav")
@@ -229,7 +259,7 @@ def evaluate_fast_single_target(
         else:
             print("using all wavs for ", word)
             fs = wavs
-        specs.extend([input_data.file2spec(model_settings, f) for f in fs])
+        specs.extend([file2spec(model_settings, f) for f in fs])
     specs = np.array(specs)
     preds = model.predict(np.expand_dims(specs, -1))
     return preds[:, target_id], preds
@@ -241,10 +271,22 @@ def evaluate_files_multiclass(
     model: tf.keras.Model,
     model_settings: Dict,
 ):
+    """
+    Evaluate the performance of a multiclass model on a list of files.
+
+    Args:
+        files_to_evaluate (List[os.PathLike]): The list of files to evaluate.
+        target_id (int): The target class ID.
+        model (tf.keras.Model): The trained model to use for evaluation.
+        model_settings (Dict): The settings of the model.
+
+    Returns:
+        dict: A dictionary containing the correct and incorrect confidences.
+    """
     correct_confidences = []
     incorrect_confidences = []
 
-    specs = [input_data.file2spec(model_settings, f) for f in files_to_evaluate]
+    specs = [file2spec(model_settings, f) for f in files_to_evaluate]
     specs = np.array(specs)
     preds = model.predict(np.expand_dims(specs, -1))
 
@@ -267,7 +309,17 @@ def evaluate_files_single_target(
     model: tf.keras.Model,
     model_settings: Dict,
 ):
-    specs = [input_data.file2spec(model_settings, f) for f in files_to_evaluate]
+    """
+    Evaluate the performance of a single-target model on a list of files.
+
+    Args:
+        files_to_evaluate (List[os.PathLike]): The list of files to evaluate.
+        target_id (int): The target class ID.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: A tuple containing the predictions for the target class and all predictions.
+    """
+    specs = [file2spec(model_settings, f) for f in files_to_evaluate]
     specs = np.array(specs)
     preds = model.predict(np.expand_dims(specs, -1))
     return preds[:, target_id], preds
@@ -281,6 +333,20 @@ def evaluate_and_track(
     model: tf.keras.Model,
     model_settings: Dict,
 ):
+    """
+    Evaluate the performance of a multiclass model on a list of words and track correct and incorrect confidences.
+
+    Args:
+        words_to_evaluate (List[str]): The list of words to evaluate.
+        target_id (int): The target class ID.
+        data_dir (os.PathLike): The directory containing the data files.
+        utterances_per_word (int): The number of utterances per word to evaluate.
+        model (tf.keras.Model): The trained model to use for evaluation.
+        model_settings (Dict): The settings of the model.
+
+    Returns:
+        dict: A dictionary containing the correct and incorrect confidences, as well as the tracked correct and incorrect confidences for each word.
+    """
     # TODO(mmaz) rewrite and combine with evaluate_fast
     raise ValueError("this only works for multiclass, see other evaluation functions")
 
@@ -297,7 +363,7 @@ def evaluate_and_track(
         track_correct[word] = []
         track_incorrect[word] = []
 
-        specs = np.array([input_data.file2spec(model_settings, f) for f in fs])
+        specs = np.array([file2spec(model_settings, f) for f in fs])
         preds = model.predict(np.expand_dims(specs, -1))
 
         # softmaxes = np.max(preds,axis=1)

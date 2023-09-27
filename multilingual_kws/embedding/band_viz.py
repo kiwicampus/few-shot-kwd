@@ -1,20 +1,18 @@
 # %%
-import os
-from os.path import split
-from pathlib import Path
-
 import glob
-from typing import Dict, List
-import numpy as np
+import os
 
 # import tensorflow as tf
 import pickle
-
+from os.path import split
+from pathlib import Path
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import seaborn as sns
 
 # verified np.isclose(rtol=0.01) for average=binary
 # from sklearn.metrics import f1_score
@@ -24,13 +22,25 @@ sns.set_style("whitegrid")
 sns.set_palette("bright")
 # sns.set(font_scale=1.6)
 
-from viz_colors import iso2lang, iso2color, iso2line
+from viz_colors import iso2color, iso2lang, iso2line
 
 # %%
 
 
 # %%
 def roc_single_target(target_results, unknown_results, f1_at_threshold=None):
+    """
+    Calculate the Receiver Operating Characteristic (ROC) curve for a single target class.
+
+    Args:
+        target_results (numpy.ndarray): Array of target class results.
+        unknown_results (numpy.ndarray): Array of unknown class results.
+        f1_at_threshold (float, optional): Threshold value for calculating F1 score. Defaults to None.
+
+    Returns:
+        tuple: Tuple containing the true positive rates (tprs), false positive rates (fprs),
+               threshold values (threshs), and error rate information (error_rate_info).
+    """
     # _TARGET_ is class 2, _UNKNOWN_ is class 1
 
     # positive label: target keywords are classified as _TARGET_ if above threshold
@@ -93,6 +103,17 @@ def roc_single_target(target_results, unknown_results, f1_at_threshold=None):
 
 
 def roc_curve_multiclass(target_resuts, unknown_results):
+    """
+    Calculate the Receiver Operating Characteristic (ROC) curve for a multiclass classification problem.
+
+    Args:
+        target_results (numpy.ndarray): Array of target class results.
+        unknown_results (numpy.ndarray): Array of unknown class results.
+
+    Returns:
+        tuple: Tuple containing the true positive rates (tprs), false positive rates (fprs),
+               and threshold values (threshs).
+    """
     # _TARGET_ is class 2, _UNKNOWN_ is class 0
 
     # positive label: target keywords classified as _TARGET_
@@ -324,10 +345,19 @@ for i, langdir in enumerate(os.listdir(paper_results)):
 
     ymean = y_all.mean(axis=1)
     # draw mean
-    ax.plot(x_all, ymean, alpha=0.7, linewidth=6, color=iso2color(lang_isocode), label=f"{iso2lang[lang_isocode]}")
+    ax.plot(
+        x_all,
+        ymean,
+        alpha=0.7,
+        linewidth=6,
+        color=iso2color(lang_isocode),
+        label=f"{iso2lang[lang_isocode]}",
+    )
     # draw bands over stdev
     ystdev = y_all.std(axis=1)
-    ax.fill_between(x_all, ymean - ystdev, ymean + ystdev, color=iso2color(lang_isocode), alpha=0.1)
+    ax.fill_between(
+        x_all, ymean - ystdev, ymean + ystdev, color=iso2color(lang_isocode), alpha=0.1
+    )
 
 AX_LIM = 0.75
 ax.set_xlim(0, 1 - AX_LIM)
@@ -458,10 +488,19 @@ for ix, (lang, results) in enumerate(lang2results.items()):
 
     ymean = y_all.mean(axis=1)
     # draw mean
-    ax.plot(x_all, ymean, alpha=0.7, color=iso2color(lang), linewidth=6, label=f"{iso2lang[lang]}")
+    ax.plot(
+        x_all,
+        ymean,
+        alpha=0.7,
+        color=iso2color(lang),
+        linewidth=6,
+        label=f"{iso2lang[lang]}",
+    )
     # draw bands over stdev
     ystdev = y_all.std(axis=1)
-    ax.fill_between(x_all, ymean - ystdev, ymean + ystdev, color=iso2color(lang), alpha=0.1)
+    ax.fill_between(
+        x_all, ymean - ystdev, ymean + ystdev, color=iso2color(lang), alpha=0.1
+    )
 
 AX_LIM = 0.75
 ax.set_xlim(0, 1 - AX_LIM)

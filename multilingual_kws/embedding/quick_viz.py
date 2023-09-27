@@ -1,23 +1,32 @@
-import os
-from pathlib import Path
-
 import glob
-from typing import Dict, List
-import numpy as np
+import os
 
 # import tensorflow as tf
 import pickle
-
+from pathlib import Path
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import seaborn as sns
 
 # sns.set()
 # sns.set_palette("bright")
 
+
 def roc_sc(target_resuts, unknown_results):
+    """
+    Calculate the true positive rate (TPR) and false positive rate (FPR) for binary classification.
+
+    Args:
+        target_results (dict): Dictionary containing the results for the target class.
+        unknown_results (dict): Dictionary containing the results for the unknown class.
+
+    Returns:
+        tuple: A tuple containing the TPRs, FPRs, and threshold values.
+    """
     # _TARGET_ is class 1, _UNKNOWN_ is class 0
 
     # positive label: target keywords classified as _TARGET_
@@ -47,6 +56,7 @@ def roc_sc(target_resuts, unknown_results):
         fpr = unknown_incorrect[unknown_incorrect > threshold].shape[0] / unknown_total
         fprs.append(fpr)
     return tprs, fprs, threshs
+
 
 ##############################################################################################
 ####### SINGLE LANGUAGE
@@ -102,7 +112,7 @@ def roc_sc(target_resuts, unknown_results):
 ####### MULTI LANGUAGE
 ##############################################################################################
 
-#model_dest_dir = Path(f"/home/mark/tinyspeech_harvard/multilang_analysis/")
+# model_dest_dir = Path(f"/home/mark/tinyspeech_harvard/multilang_analysis/")
 model_dest_dir = Path(f"/home/mark/tinyspeech_harvard/multilang_analysis_ooe/")
 if not os.path.isdir(model_dest_dir):
     raise ValueError("no model dir", model_dest_dir)
@@ -110,7 +120,17 @@ results_dir = model_dest_dir / "results"
 if not os.path.isdir(results_dir):
     raise ValueError("no results dir", results_dir)
 
+
 def sc_roc_plotly(results: List[Dict]):
+    """
+    Generate a plotly figure for ROC (Receiver Operating Characteristic) curve.
+
+    Args:
+        results (List[Dict]): List of dictionaries containing the results for each target class.
+
+    Returns:
+        go.Figure: Plotly figure object representing the ROC curve.
+    """
     fig = go.Figure()
     for ix, res in enumerate(results):
         target_results = res["target_results"]

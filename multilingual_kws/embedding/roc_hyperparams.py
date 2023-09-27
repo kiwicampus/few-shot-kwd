@@ -1,29 +1,39 @@
-#%%
-import os
+# %%
+import datetime
+import glob
 import logging
+import os
+import pickle
 import re
+import sys
 from typing import Dict, List
 
-import glob
-import numpy as np
-import pickle
-import datetime
-
-import sys
-
-# sys.path.insert(0, "/home/mark/tinyspeech_harvard/tinyspeech/")
-# import input_data
-
 import matplotlib.pyplot as plt
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 
+# sys.path.insert(0, "/home/mark/tinyspeech_harvard/tinyspeech/")
+# import input_data
+
+
 sns.set()
 sns.set_palette("bright")
 
-#%%
+
+# %%
 def roc_sc(target_resuts, unknown_results):
+    """
+    Calculate the true positive rate (TPR) and false positive rate (FPR) for binary classification.
+
+    Args:
+        target_results (dict): Dictionary containing the results for the target class.
+        unknown_results (dict): Dictionary containing the results for the unknown class.
+
+    Returns:
+        tuple: A tuple containing the TPRs, FPRs, and threshold values.
+    """
     # _TARGET_ is class 1, _UNKNOWN_ is class 0
 
     # positive label: target keywords classified as _TARGET_
@@ -57,25 +67,7 @@ def roc_sc(target_resuts, unknown_results):
     return tprs, fprs, threshs
 
 
-#%%
-
-
-def nice(ne, nb, bs, trial):
-    # if ne == 8 and nb == 1 and bs == 64:
-    #     return True
-    # if ne == 7 and nb == 2 and bs == 32:
-    #     return True
-    # if ne == 9 and nb == 2 and bs == 32:
-    #     return True
-    # if ne == 3 and nb == 3 and bs == 64:
-    #     return True
-    # if ne == 4 and nb == 2 and bs == 64:
-    #     return True
-    if ne in [8,9] and bs == 64:
-        return True
-    return False
-
-#%%
+# %%
 
 results_dir = "/home/mark/tinyspeech_harvard/hyperparam_analysis/results/"
 files = os.listdir(results_dir)
@@ -104,14 +96,14 @@ for crash in crashes:
 print("number of results", len(results.keys()))
 
 
-#%%
+# %%
 
-#%%
+# %%
 
 #  fig = go.Figure()
 #  # for model, rd in results.items():
 #  for rd in results:
-#  
+#
 #      tprs, fprs, thresh_labels = roc_sc(rd["target_results"], rd["unknown_results"])
 #      ne = rd["num_epochs"]
 #      nb = rd["num_batches"]
@@ -126,7 +118,7 @@ print("number of results", len(results.keys()))
 #      # fig.add_trace(go.Scatter(x=fprs, y=tprs, text=thresh_labels, name=legend))
 #      legend_w_threshs = [legend + f"<br>thresh: {t}" for t in thresh_labels]
 #      fig.add_trace(go.Scatter(x=fprs, y=tprs, text=legend_w_threshs, name=legend))
-#  
+#
 #  fig.update_layout(
 #      xaxis_title="FPR",
 #      yaxis_title="TPR",
@@ -141,7 +133,7 @@ print("number of results", len(results.keys()))
 #  fig
 
 # %%
-test_dir="/home/mark/tinyspeech_harvard/utterance_sweep_2/"
+test_dir = "/home/mark/tinyspeech_harvard/utterance_sweep_2/"
 rd = f"{test_dir}/results/"
 rs = glob.glob(rd + "*.pkl")
 # print(rs)
@@ -151,15 +143,15 @@ ts = glob.glob(rd + "*.pkl")
 # print(ts)
 
 results = []
-for r,t in zip(rs,ts):
-    with open(r, 'rb') as fh:
+for r, t in zip(rs, ts):
+    with open(r, "rb") as fh:
         result = pickle.load(fh)
-    with open(t, 'rb') as fh:
+    with open(t, "rb") as fh:
         trial_info = pickle.load(fh)
-    results.append((result,trial_info))
+    results.append((result, trial_info))
 print("NUM RESULTS", len(results))
 
-target_sets=set()
+target_sets = set()
 for rd, ti in results:
     target_sets.add(rd["rtl"]["target_set"])
 print(target_sets)
@@ -168,7 +160,6 @@ print(target_sets)
 fig = go.Figure()
 # for model, rd in results.items():
 for rd, ti in results:
-
     tprs, fprs, thresh_labels = roc_sc(rd["target_results"], rd["unknown_results"])
     ne = rd["rtl"]["num_epochs"]
     nb = rd["rtl"]["num_batches"]
@@ -184,7 +175,9 @@ for rd, ti in results:
     # fig.add_trace(go.Scatter(x=fprs, y=tprs, text=thresh_labels, name=legend))
     legend_w_threshs = [legend + f"<br>thresh: {t}" for t in thresh_labels]
     c = px.colors.qualitative.Dark24[target_set % 24]
-    fig.add_trace(go.Scatter(x=fprs, y=tprs, text=legend_w_threshs, name=legend, marker_color=c))
+    fig.add_trace(
+        go.Scatter(x=fprs, y=tprs, text=legend_w_threshs, name=legend, marker_color=c)
+    )
 
 fig.update_layout(
     xaxis_title="FPR",
@@ -192,13 +185,13 @@ fig.update_layout(
     title="target: two [speech commands classification accuracy] <br> [ne: #epochs, nb: #batches, bs: batch size, va: val accuracy]",
     # hoverlabel=dict(font_size=8), # https://plotly.com/python/hover-text-and-formatting/
 )
-fig.update_xaxes(range=[0,1])
-fig.update_yaxes(range=[0,1])
+fig.update_xaxes(range=[0, 1])
+fig.update_yaxes(range=[0, 1])
 # fig.update_xaxes(range=[0.075, 0.25])
 # fig.update_yaxes(range=[0.8, 0.92])
-#fig.write_html(f"{test_dir}/hpsweep.html")
+# fig.write_html(f"{test_dir}/hpsweep.html")
 fig
 
 
-#%%
+# %%
 len(px.colors.qualitative.Dark24)

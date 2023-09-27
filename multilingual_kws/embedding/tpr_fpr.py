@@ -1,6 +1,19 @@
 def get_groundtruth(
-    found_words, targets, groundtruth, time_tolerance_ms=1500,
+    found_words,
+    targets,
+    groundtruth,
+    time_tolerance_ms=1500,
 ):
+    """
+    Get the ground truth detections for the given found words and targets.
+
+    Args:
+        found_words (list): A list of found words.
+        targets (list): A list of target words.
+
+    Returns:
+        list: A list of detections.
+    """
     detections = []
     for target in targets:
         gt_target_times = [t for k, t in groundtruth if k == target]
@@ -69,6 +82,17 @@ def tpr_fpr(
     time_tolerance_ms,
     num_nontarget_words=None,
 ):
+    """
+    Calculate the true positive rate (TPR) and false positive rate (FPR) for a given keyword and threshold.
+
+    Args:
+        keyword (str): The keyword to evaluate.
+        thresh (float): The threshold value.
+
+    Returns:
+        dict: A dictionary containing the calculated TPR, FPR, true positives, false positives, false negatives,
+              false rejections per instance, false accepts per hour, and the number of groundtruth positives.
+    """
     found_target_times = [t for f, t in found_words if f == keyword]
 
     # find false negatives

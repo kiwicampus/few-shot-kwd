@@ -1,32 +1,28 @@
-#%%
-import logging
-import os
-import re
-from typing import Dict, List
+# %%
 import datetime
-from dataclasses import asdict, dataclass
-
 import glob
-import numpy as np
-import pickle
+import logging
 import multiprocessing
-
+import os
+import pickle
+import re
 import sys
+from dataclasses import asdict, dataclass
+from typing import Dict, List
 
 import input_data
-
-import transfer_learning
-
 import matplotlib.pyplot as plt
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-
 import seaborn as sns
+import tensorflow as tf
+import transfer_learning
 
 sns.set()
 sns.set_palette("bright")
 
-#%%
+# %%
 
 data_dir = "/home/mark/tinyspeech_harvard/frequent_words/en/clips/"
 model_dir = "/home/mark/tinyspeech_harvard/xfer_oov_efficientnet_binary/"
@@ -43,7 +39,9 @@ with open(
     commands = fh.read().splitlines()
 
 print(
-    len(commands), len(unknown_words), len(oov_words),
+    len(commands),
+    len(unknown_words),
+    len(oov_words),
 )
 
 other_words = [
@@ -95,14 +93,36 @@ unknown_sample = np.random.choice(non_target_words, 24, replace=False).tolist()
 print("UNKNOWN_SAMPLE:")
 print(unknown_sample)
 
-#%%
+# %%
 model_settings = input_data.standard_microspeech_model_settings(3)
 
-#%%
+# %%
 
 
 @dataclass
 class RunTransferLearning:
+    """
+    Represents a configuration for running transfer learning.
+
+    Attributes:
+        dest_dir (os.PathLike): The destination directory for saving the models and results.
+        ix (int): The index of the transfer learning run.
+        trial (int): The trial number.
+        target_set (int): The target set number.
+        target (str): The target word for transfer learning.
+        train_files (List[str]): The list of training files.
+        val_files (List[str]): The list of validation files.
+        unknown_sample (List[str]): The list of unknown words to sample from the data directory.
+        unknown_files (List[os.PathLike]): The paths of utterances to use as unknown during training.
+        num_epochs (int): The number of epochs for training.
+        num_batches (int): The number of batches for training.
+        batch_size (int): The batch size for training.
+        model_settings (Dict): The settings for the model.
+        data_dir (os.PathLike): The data directory.
+        base_model_path (os.PathLike): The path of the base model.
+        base_model_output (str): The output layer of the base model.
+    """
+
     dest_dir: os.PathLike
     ix: int
     trial: int
@@ -124,7 +144,15 @@ class RunTransferLearning:
 
 
 def run_transfer_learning(rtl: RunTransferLearning):
-    import tensorflow as tf
+    """
+    Runs transfer learning using the provided configuration.
+
+    Args:
+        rtl (RunTransferLearning): The configuration for running transfer learning.
+
+    Returns:
+        None
+    """
 
     name, model, details = transfer_learning.transfer_learn(
         target=rtl.target,
@@ -178,12 +206,22 @@ def run_transfer_learning(rtl: RunTransferLearning):
 
     return
 
-#%%
+
+# %%
 model_settings = input_data.standard_microspeech_model_settings(3)
 
-#%%
+
+# %%
 @dataclass
 class SamplePoint:
+    """
+    Represents a sample point with the number of epochs and batches.
+
+    Attributes:
+        num_epochs (int): The number of epochs.
+        num_batches (int): The number of batches.
+    """
+
     num_epochs: int
     num_batches: int
     batch_size: int
@@ -194,7 +232,7 @@ sample_points = [
     # SamplePoint(num_epochs=4, num_batches=2, batch_size=64),
     # SamplePoint(num_epochs=7, num_batches=2, batch_size=32),
     # SamplePoint(num_epochs=8, num_batches=1, batch_size=64),
-    #SamplePoint(num_epochs=9, num_batches=2, batch_size=32),
+    # SamplePoint(num_epochs=9, num_batches=2, batch_size=32),
     SamplePoint(num_epochs=9, num_batches=1, batch_size=64),
 ]
 n_trials = 1
@@ -206,7 +244,7 @@ for sample_point in sample_points:
             ix += 1
 print("num runs", ix)
 
-#%%
+# %%
 N_SHOTS = 5
 VAL_UTTERANCES = 400
 dest_dir = "/home/mark/tinyspeech_harvard/utterance_sweep_3/"
@@ -251,14 +289,14 @@ for sample_point in sample_points:
                 model_settings=model_settings,
                 data_dir=data_dir,
                 base_model_path="/home/mark/tinyspeech_harvard/train_100_augment/hundredword_efficientnet_1600_selu_specaug80.0146-0.8736",
-                base_model_output="dense_2"
+                base_model_output="dense_2",
             )
 
             start = datetime.datetime.now()
             p = multiprocessing.Process(target=run_transfer_learning, args=(rtl,))
             p.start()
             p.join()
-            #p.close()
+            # p.close()
             end = datetime.datetime.now()
             print(":::::::::::::: TIME", str(end - start)[:-7])
 
@@ -273,4 +311,3 @@ for sample_point in sample_points:
             )
             with open(dest_dir + "trials/" + f"trial_info_{ix:03d}.pkl", "wb") as fh:
                 pickle.dump(trial_info, fh)
-

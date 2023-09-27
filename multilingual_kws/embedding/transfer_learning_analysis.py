@@ -1,36 +1,32 @@
-#%%
-import os
-import logging
-from typing import Dict, List
+# %%
 import datetime
-from pathlib import Path
-
 import glob
-import numpy as np
-import tensorflow as tf
+import logging
+import os
 import pickle
-
 import sys
+from pathlib import Path
+from typing import Dict, List
 
 import input_data
-
-import transfer_learning
-
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import seaborn as sns
+import tensorflow as tf
+import transfer_learning
 
 sns.set()
 sns.set_palette("bright")
 # sns.set(font_scale=1)
 
-#%%
+# %%
 
 tf.config.list_physical_devices("GPU")
 
 
-#%% analysis
+# %% analysis
 
 
 def analyze_model(
@@ -46,6 +42,25 @@ def analyze_model(
     n_words_oov_unknown=50,
     n_examples_oov_unknown=200,
 ):
+    """
+    Analyzes a model by evaluating its performance on different sets of commands.
+
+    Args:
+        model_path (os.PathLike): The path to the model file.
+        model_commands (List[str]): The list of commands used for evaluation.
+        val_acc (float): The validation accuracy of the model.
+        data_dir (os.PathLike): The directory containing the data.
+        audio_dataset (input_data.AudioDataset): The audio dataset.
+        unknown_training_words (List[str]): The list of words used to train the _UNKNOWN_ category.
+        oov_words (List[str]): The list of out-of-vocabulary words.
+        embedding_commands (List[str]): The list of commands used to train the embedding model.
+        num_samples_command (int, optional): The number of samples per command. Defaults to 1500.
+        n_words_oov_unknown (int, optional): The number of out-of-vocabulary words to evaluate. Defaults to 50.
+        n_examples_oov_unknown (int, optional): The number of examples per out-of-vocabulary word to evaluate. Defaults to 200.
+
+    Returns:
+        dict: A dictionary containing the evaluation results.
+    """
     print("loading", model_path)
     tf.get_logger().setLevel(logging.ERROR)
     xfer = tf.keras.models.load_model(model_path)
@@ -179,6 +194,15 @@ def analyze_model(
 
 
 def calc_roc(res):
+    """
+    Calculate the Receiver Operating Characteristic (ROC) curve for binary classification.
+
+    Args:
+        res (dict): A dictionary containing the results of the classification.
+
+    Returns:
+        tuple: A tuple containing the true positive rates (TPRs) and false positive rates (FPRs).
+    """
     # _TARGET_ is class 1, _UNKNOWN_ is class 0
 
     # positive label: target keywords classified as _TARGET_
@@ -223,6 +247,15 @@ def calc_roc(res):
 
 
 def make_roc_plotly(results: List[Dict]):
+    """
+    Create a plotly figure for the Receiver Operating Characteristic (ROC) curve.
+
+    Args:
+        results (List[Dict]): A list of dictionaries containing the classification results.
+
+    Returns:
+        fig (go.Figure): The plotly figure object.
+    """
     fig = go.Figure()
     for ix, res in enumerate(results):
         tprs, fprs = calc_roc(res)
@@ -240,6 +273,21 @@ def make_roc_plotly(results: List[Dict]):
 
 
 def make_roc(results: List[Dict], nrows: int, ncols: int):
+    """
+    Create ROC plots for the given results.
+
+    Args:
+        results (List[Dict]): A list of dictionaries containing the classification results.
+        nrows (int): The number of rows in the subplot grid.
+        ncols (int): The number of columns in the subplot grid.
+
+    Returns:
+        fig (matplotlib.figure.Figure): The matplotlib figure object.
+        axes (numpy.ndarray): The array of axes objects.
+
+    Raises:
+        AssertionError: If the number of results is not equal to nrows * ncols.
+    """
     assert nrows * ncols == len(results), "fewer results than requested plots"
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
     for ix, (res, ax) in enumerate(zip(results, axes.flatten())):
@@ -259,6 +307,22 @@ def make_roc(results: List[Dict], nrows: int, ncols: int):
 
 
 def make_viz(results: List[Dict], threshold: float, nrows: int, ncols: int):
+    """
+    Create visualizations for the given results.
+
+    Args:
+        results (List[Dict]): A list of dictionaries containing the classification results.
+        threshold (float): The threshold value for the visualizations.
+        nrows (int): The number of rows in the subplot grid.
+        ncols (int): The number of columns in the subplot grid.
+
+    Returns:
+        fig (matplotlib.figure.Figure): The matplotlib figure object.
+        axes (numpy.ndarray): The array of axes objects.
+
+    Raises:
+        AssertionError: If the number of results is not equal to nrows * ncols.
+    """
     assert nrows * ncols == len(results), "fewer results than requested plots"
 
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
@@ -343,6 +407,16 @@ def make_viz(results: List[Dict], threshold: float, nrows: int, ncols: int):
 
 
 def roc_sc(target_resuts, unknown_results):
+    """
+    Calculate the true positive rate (TPR) and false positive rate (FPR) for binary classification.
+
+    Args:
+        target_results (dict): Dictionary containing the results for the target class.
+        unknown_results (dict): Dictionary containing the results for the unknown class.
+
+    Returns:
+        tuple: A tuple containing the TPRs, FPRs, and threshold values.
+    """
     # _TARGET_ is class 1, _UNKNOWN_ is class 0
 
     # positive label: target keywords classified as _TARGET_
@@ -375,6 +449,18 @@ def roc_sc(target_resuts, unknown_results):
 
 
 def roc_single_target(target_results, unknown_results):
+    """
+    Calculate the Receiver Operating Characteristic (ROC) curve for a single target class.
+
+    Args:
+        target_results (numpy.ndarray): Array of target class results.
+        unknown_results (numpy.ndarray): Array of unknown class results.
+        f1_at_threshold (float, optional): Threshold value for calculating F1 score. Defaults to None.
+
+    Returns:
+        tuple: Tuple containing the true positive rates (tprs), false positive rates (fprs),
+               threshold values (threshs), and error rate information (error_rate_info).
+    """
     # _TARGET_ is class 2, _UNKNOWN_ is class 1
 
     # positive label: target keywords are classified as _TARGET_ if above threshold
@@ -404,7 +490,7 @@ def roc_single_target(target_results, unknown_results):
     return tprs, fprs, threshs
 
 
-#%% LOAD DATA
+# %% LOAD DATA
 data_dir = "/home/mark/tinyspeech_harvard/frequent_words/en/clips/"
 model_dir = "/home/mark/tinyspeech_harvard/xfer_oov_efficientnet_binary/"
 with open(model_dir + "unknown_words.pkl", "rb") as fh:
@@ -420,7 +506,9 @@ with open(
     commands = fh.read().splitlines()
 
 print(
-    len(commands), len(unknown_words), len(oov_words),
+    len(commands),
+    len(unknown_words),
+    len(oov_words),
 )
 
 other_words = [
@@ -430,7 +518,7 @@ other_words.sort()
 print(len(other_words))
 assert len(set(other_words).intersection(commands)) == 0
 
-#%%  TRAINING
+# %%  TRAINING
 #  destdir = "/home/mark/tinyspeech_harvard/xfer_efnet_10/"
 #  basemodelpath = "/home/mark/tinyspeech_harvard/train_100_augment/hundredword_efficientnet_1600_selu_specaug80.0146-0.8736"
 #  random_sample_transfer_models(
@@ -446,7 +534,7 @@ assert len(set(other_words).intersection(commands)) == 0
 #  )
 
 
-#%%
+# %%
 #
 # epochs = "_epochs_"
 # start = m.find(epochs) + len(epochs)
@@ -463,7 +551,7 @@ assert len(set(other_words).intersection(commands)) == 0
 #
 
 
-#%% LISTEN
+# %% LISTEN
 ###############################################
 ##               LISTEN
 ###############################################
@@ -485,7 +573,7 @@ assert len(set(other_words).intersection(commands)) == 0
 #     time.sleep(0.5)
 #
 
-#%%
+# %%
 ###############################################
 ##               SPEECH COMMANDS
 ###############################################
@@ -570,7 +658,7 @@ print(non_embedding_speech_commands)
 # #%%
 
 
-#%%
+# %%
 # fig = go.Figure()
 # tprs, fprs, thresh_labels = roc_sc(target_results, unknown_results)
 # fig.add_trace(go.Scatter(x=fprs, y=tprs, text=thresh_labels, name=target))
@@ -635,7 +723,7 @@ print(non_embedding_speech_commands)
 # fig
 
 
-#%%
+# %%
 # how many utterances total in dataset
 n_utterances = 0
 for w in os.listdir(data_dir):
@@ -644,16 +732,16 @@ for w in os.listdir(data_dir):
 print(n_utterances, len(os.listdir(data_dir)))
 
 
-#%%
+# %%
 ###############################################
 ##   per language embedding model
 ###############################################
 
 isocode2model = dict(
-    #en="/home/mark/tinyspeech_harvard/train_100_augment/hundredword_efficientnet_1600_selu_specaug80.0150-0.8727",
-    #rw="rw_165commands_efficientnet_selu_specaug80_resume93.008-0.7895",
+    # en="/home/mark/tinyspeech_harvard/train_100_augment/hundredword_efficientnet_1600_selu_specaug80.0150-0.8727",
+    # rw="rw_165commands_efficientnet_selu_specaug80_resume93.008-0.7895",
     # nl="nl_165commands_efficientnet_selu_specaug80_resume62_resume08.037-0.7960",
-    #es="es_165commands_efficientnet_selu_specaug80_resume34_10_.009-0.8620",
+    # es="es_165commands_efficientnet_selu_specaug80_resume34_10_.009-0.8620",
     # de="de_165commands_efficientnet_selu_specaug80_resume93.127-0.8515",
     it="it_165commands_efficientnet_selu_specaug80_resume53.018-0.8208",
 )
@@ -696,17 +784,17 @@ if os.path.isdir(model_dest_dir):
 os.makedirs(model_dest_dir)
 os.makedirs(model_dest_dir / "models")
 os.makedirs(results_dir)
-#%%
+# %%
 
 
-#%%
+# %%
 # find layer name (optional)
 tf.get_logger().setLevel(logging.ERROR)
 model = tf.keras.models.load_model(base_model_path)
 tf.get_logger().setLevel(logging.INFO)
 model.summary()
 
-#%%
+# %%
 N_UNKNOWN_WORDS = 50
 N_SAMPLES_FROM_UNKNOWN = 70
 N_SAMPLES_FROM_COMMANDS = 20
@@ -800,7 +888,8 @@ for ix, model_file in enumerate(os.listdir(model_dest_dir / "models")):
         unknown_sample=unknown_sample,
     )
     with open(
-        model_dest_dir / "results" / f"result_{LANG_ISOCODE}_{target}.pkl", "wb",
+        model_dest_dir / "results" / f"result_{LANG_ISOCODE}_{target}.pkl",
+        "wb",
     ) as fh:
         pickle.dump(results, fh)
 
@@ -809,11 +898,21 @@ for ix, model_file in enumerate(os.listdir(model_dest_dir / "models")):
     print("time elapsed", end_word - start_word)
 
 
-#%%
+# %%
 ### SELECT TARGET
 
 
 def results_exist(target, results_dir):
+    """
+    Check if results exist for a given target in the specified directory.
+
+    Args:
+        target (str): The target word.
+        results_dir (str): The directory where the results are stored.
+
+    Returns:
+        bool: True if results exist for the target, False otherwise.
+    """
     results = [
         os.path.splitext(r)[0]
         for r in os.listdir(results_dir)
@@ -906,17 +1005,29 @@ for ix in range(20):
     )
     result_file = model_dest_dir / "results" / f"result_{LANG_ISOCODE}_{target}.pkl"
     assert not os.path.isfile(result_file), f"{result_file} already exists"
-    with open(result_file, "wb",) as fh:
+    with open(
+        result_file,
+        "wb",
+    ) as fh:
         pickle.dump(results, fh)
 
     tf.keras.backend.clear_session()  # https://keras.io/api/utils/backend_utils/
     end_word = datetime.datetime.now()
     print("time elapsed", end_word - start_word)
 
-#%%
+# %%
 
 
 def sc_roc_plotly(results: List[Dict]):
+    """
+    Generate a plotly figure for ROC (Receiver Operating Characteristic) curve.
+
+    Args:
+        results (List[Dict]): List of dictionaries containing the results for each target class.
+
+    Returns:
+        go.Figure: Plotly figure object representing the ROC curve.
+    """
     fig = go.Figure()
     for ix, res in enumerate(results):
         target_results = res["target_results"]
@@ -954,7 +1065,7 @@ fig.write_html(dest_plot)
 fig
 
 
-#%%
+# %%
 # how many utterances total in dataset
 n_utterances = 0
 for w in os.listdir(data_dir):
@@ -988,7 +1099,7 @@ for l, w in oov_lang_words:
 print(counts)
 
 
-#%%
+# %%
 ###############################################
 ##               MULTILANG
 ###############################################
@@ -1019,14 +1130,14 @@ if not os.path.isdir(bg_datadir):
     raise ValueError("no bg data", bg_datadir)
 
 frequent_words = Path("/home/mark/tinyspeech_harvard/frequent_words/")
-#%%
+# %%
 # find layer name (optional)
 tf.get_logger().setLevel(logging.ERROR)
 model = tf.keras.models.load_model(base_model_path)
 tf.get_logger().setLevel(logging.INFO)
 model.summary()
 
-#%%
+# %%
 # select unknown words for finetuning
 N_UNKNOWN_WORDS = 300
 N_UNKNOWN_UTTERANCES_PER_WORD = 10
@@ -1124,7 +1235,7 @@ assert not os.path.isfile(unknown_collection_path)
 with open(unknown_collection_path, "wb") as fh:
     pickle.dump(unknown_collection, fh)
 
-#%%
+# %%
 
 unknown_collection_path = model_dest_dir / "unknown_collection.pkl"
 with open(unknown_collection_path, "rb") as fh:
@@ -1133,7 +1244,7 @@ unknown_lang_words = unknown_collection["unknown_lang_words"]
 unknown_files = unknown_collection["unknown_files"]
 oov_lang_words = unknown_collection["oov_lang_words"]
 
-#%%
+# %%
 # select unknown/oov/command words for model evaluation (not finetuning)
 
 
@@ -1146,6 +1257,16 @@ def generate_random_non_target_files_for_eval(
     n_non_targets_per_category=100,
     n_utterances_per_non_target=80,
 ):
+    """
+    Generate random non-target files for evaluation.
+
+    Args:
+        target_word (str): The target word for evaluation.
+        unknown_lang_words (List): List of unknown language words.
+
+    Returns:
+        List: List of non-target files for evaluation.
+    """
     # select unknown/oov/command words for model evaluation (**not for finetuning**)
 
     # 3 categories: unknown, oov, command
@@ -1249,17 +1370,28 @@ for model_file in os.listdir(model_dest_dir / "models"):
         commands=commands,
     )
     with open(
-        model_dest_dir / "results" / f"hpsweep_{target_lang}_{target_word}.pkl", "wb",
+        model_dest_dir / "results" / f"hpsweep_{target_lang}_{target_word}.pkl",
+        "wb",
     ) as fh:
         pickle.dump(results, fh)
 
     tf.keras.backend.clear_session()  # https://keras.io/api/utils/backend_utils/
 
-#%%
+# %%
 ### SELECT TARGET
 
 
 def results_exist(target, results_dir):
+    """
+    Check if results exist for a given target in the specified directory.
+
+    Args:
+        target (str): The target word.
+        results_dir (str): The directory where the results are stored.
+
+    Returns:
+        bool: True if results exist for the target, False otherwise.
+    """
     results = [
         os.path.splitext(r)[0]
         for r in os.listdir(results_dir)
@@ -1362,7 +1494,8 @@ for ix in range(20):
         commands=commands,
     )
     with open(
-        model_dest_dir / "results" / f"hpsweep_{target_lang}_{target_word}.pkl", "wb",
+        model_dest_dir / "results" / f"hpsweep_{target_lang}_{target_word}.pkl",
+        "wb",
     ) as fh:
         pickle.dump(results, fh)
 
@@ -1370,7 +1503,7 @@ for ix in range(20):
     end_word = datetime.datetime.now()
     print("elapsed time", end_word - start_word)
 
-#%%
+# %%
 
 # model_dest_dir = Path(f"/home/mark/tinyspeech_harvard/multilang_analysis/")
 model_dest_dir = Path(f"/home/mark/tinyspeech_harvard/multilang_analysis_ooe/")
@@ -1382,6 +1515,15 @@ if not os.path.isdir(results_dir):
 
 
 def sc_roc_plotly(results: List[Dict]):
+    """
+    Generate a plotly figure for ROC (Receiver Operating Characteristic) curve.
+
+    Args:
+        results (List[Dict]): List of dictionaries containing the results for each target class.
+
+    Returns:
+        go.Figure: Plotly figure object representing the ROC curve.
+    """
     fig = go.Figure()
     for ix, res in enumerate(results):
         target_results = res["target_results"]
@@ -1396,7 +1538,9 @@ def sc_roc_plotly(results: List[Dict]):
         fig.add_trace(go.Scatter(x=fprs, y=tprs, text=thresh_labels, name=curve_label))
 
     fig.update_layout(
-        xaxis_title="FPR", yaxis_title="TPR", title=f"5-shot classification accuracy",
+        xaxis_title="FPR",
+        yaxis_title="TPR",
+        title=f"5-shot classification accuracy",
     )
     fig.update_xaxes(range=[0, 1])
     fig.update_yaxes(range=[0, 1])

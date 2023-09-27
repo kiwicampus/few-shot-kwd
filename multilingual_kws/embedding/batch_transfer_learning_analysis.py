@@ -1,25 +1,22 @@
-#%%
-import logging
-import os
-import re
-from typing import Dict, List
+# %%
 import datetime
+import glob
+import logging
+import multiprocessing
+import os
+import pickle
+import re
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-
-import glob
-import numpy as np
-import pickle
-import multiprocessing
-
-import sys
+from typing import Dict, List
 
 import embedding.input_data as input_data
-
 import embedding.transfer_learning as transfer_learning
+import numpy as np
+import tensorflow as tf
 
-
-#%%
+# %%
 
 
 def generate_random_non_target_files_for_eval(
@@ -31,6 +28,16 @@ def generate_random_non_target_files_for_eval(
     n_non_targets_per_category=100,
     n_utterances_per_non_target=80,
 ):
+    """
+    Generate random non-target files for evaluation.
+
+    Args:
+        target_word (str): The target word for evaluation.
+        unknown_lang_words (List): List of unknown language words.
+
+    Returns:
+        List: List of non-target files for evaluation.
+    """
     # select unknown/oov/command words for model evaluation (**not for finetuning**)
 
     # 3 categories: unknown, oov, command
@@ -81,6 +88,16 @@ def generate_random_non_target_files_for_eval(
 
 
 def results_exist(target, results_dir):
+    """
+    Check if results exist for a given target in the specified directory.
+
+    Args:
+        target (str): The target word.
+        results_dir (str): The directory where the results are stored.
+
+    Returns:
+        bool: True if results exist for the target, False otherwise.
+    """
     # make sure we are not overwriting existing results
     results = [
         os.path.splitext(r)[0]
@@ -96,6 +113,14 @@ def results_exist(target, results_dir):
 
 @dataclass
 class TargetData:
+    """
+    Represents the data for a target in the transfer learning process.
+
+    Attributes:
+        lang_ix (int): The index of the language.
+        target_ix (int): The index of the target.
+    """
+
     lang_ix: int
     target_ix: int
     target_word: str
@@ -112,7 +137,15 @@ class TargetData:
 
 
 def run_transfer_learning(td: TargetData):
-    import tensorflow as tf
+    """
+    Run the transfer learning process.
+
+    Args:
+        td (TargetData): The data for the target in the transfer learning process.
+
+    Returns:
+        None
+    """
 
     model_settings = input_data.standard_microspeech_model_settings(label_count=3)
 
@@ -167,7 +200,10 @@ def run_transfer_learning(td: TargetData):
         target_data=asdict(td),
     )
 
-    with open(result_pkl, "wb",) as fh:
+    with open(
+        result_pkl,
+        "wb",
+    ) as fh:
         pickle.dump(results, fh)
 
     # https://keras.io/api/utils/backend_utils/
@@ -176,7 +212,7 @@ def run_transfer_learning(td: TargetData):
     return
 
 
-#%%
+# %%
 
 iso2lang = {
     "ar": "Arabic",
@@ -224,7 +260,9 @@ base_model_path = (
 paper_data = Path("/home/mark/tinyspeech_harvard/paper_data/")
 base_result_dir = paper_data / "ooe_multilang_classification"
 
-assert os.listdir(base_result_dir) == [], f"there are already results in {base_result_dir}"
+assert (
+    os.listdir(base_result_dir) == []
+), f"there are already results in {base_result_dir}"
 
 # only sample unknown words from languages already in multilingual embedding model
 # otherwise eval would be unfair (finetuned model might see more than just
@@ -239,7 +277,7 @@ commands = unknown_collection["commands"]
 unknown_word_set = set([w for l, w in unknown_lang_words])
 command_set = set(commands)
 
-#%%
+# %%
 
 # python embedding/batch_transfer_learning_analysis.py > ~/tinyspeech_harvard/paper_data/ooe_multilang_classification_batch_analysis.log
 
@@ -397,4 +435,4 @@ for train_ix, d in enumerate(all_lang_targets):
     end_clock = datetime.datetime.now()
     print("elapsed time", end_clock - start_clock, flush=True)
 
-#%%
+# %%

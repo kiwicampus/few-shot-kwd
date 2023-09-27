@@ -1,38 +1,35 @@
-#%%
-from dataclasses import dataclass
-import logging
-import sox
+# %%
 import datetime
-import os
-import sys
-import pprint
-import pickle
 import glob
-import subprocess
+import logging
+import os
 import pathlib
+import pickle
+import pprint
+import subprocess
+import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import numpy as np
-
-# import tensorflow as tf
-
+import batch_streaming_analysis as sa
 import matplotlib.pyplot as plt
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
-
-from accuracy_utils import StreamingAccuracyStats
-from single_target_recognize_commands import (
-    SingleTargetRecognizeCommands,
-    RecognizeResult,
-)
-
-import batch_streaming_analysis as sa
+import sox
+from keyword_detection.few-shot.multilingual_kws.embedding.accuracy_utils import StreamingAccuracyStats
 from batch_streaming_analysis import StreamTarget
 from batch_transfer_learn_streaming import TLData
+from single_target_recognize_commands import (
+    RecognizeResult,
+    SingleTargetRecognizeCommands,
+)
+from viz_colors import iso2color, iso2lang, iso2line
 
-from viz_colors import iso2lang, iso2color, iso2line
+# import tensorflow as tf
+
 
 sns.set()
 sns.set_style("white")
@@ -70,12 +67,25 @@ ACC_THRESH = 0.8
 # print(q, np.all(np.diff(q) <=0))
 
 
-#%%
+# %%
 
 
 def multi_streaming_FRR_FAR_curve(
     lang2results, figname, average_accuracy_for, use_rate=True, time_tolerance_ms=1500
 ):
+    """
+    Calculate and plot the False Rejection Rate (FRR) and False Acceptance Rate (FAR) curves for multiple streaming results.
+
+    Parameters:
+    - lang2results: A dictionary mapping languages to their corresponding results.
+    - figname: The name of the figure to be generated.
+    - average_accuracy_for: The threshold for calculating the average accuracy.
+    - use_rate: A boolean indicating whether to use the false acceptance rate (FAR) or false accepts per second.
+    - time_tolerance_ms: The time tolerance in milliseconds.
+
+    Returns:
+    None
+    """
     # legacy (initial submission):
     # change from 2-tuple to 3-tuple (contains stats object)
     #       for (thresh, (_, found_words, all_found_w_confidences)) in results_for_target.items():
@@ -321,6 +331,14 @@ with open("/home/mark/tinyspeech_harvard/paper_data/context_batchdata.pkl", "rb"
 
 @dataclass(frozen=True)
 class CResult:
+    """
+    Represents the result of a stream target in the keyword detection process.
+
+    Attributes:
+        result (os.PathLike): The path to the result file.
+        target (sa.StreamTarget): The stream target object.
+    """
+
     result: os.PathLike
     target: sa.StreamTarget
     is_in_embedding: bool
@@ -422,14 +440,6 @@ figname = (
 with open("/home/mark/tinyspeech_harvard/paper_data/context_batchdata.pkl", "rb") as fh:
     context_batchdata = pickle.load(fh)
 
-
-@dataclass(frozen=True)
-class CResult:
-    result: os.PathLike
-    target: sa.StreamTarget
-    is_in_embedding: bool
-
-
 perword_results = []
 for d in context_batchdata:
     for t in d.stream_targets:
@@ -446,7 +456,6 @@ for d in context_batchdata:
 
 multi_results = []
 for r in perword_results:
-
     duration_s = sox.file_info.duration(r.target.stream_flags[0].wav)
     groundtruth_file = r.target.stream_flags[0].ground_truth
 
