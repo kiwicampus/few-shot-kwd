@@ -1,7 +1,7 @@
 # based on https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/speech_commands/test_streaming_accuracy.py
 
 
-#%%
+# %%
 from dataclasses import dataclass
 import logging
 import sox
@@ -29,7 +29,10 @@ sns.set_palette("bright")
 
 import input_data
 from accuracy_utils import StreamingAccuracyStats
-from single_target_recognize_commands import SingleTargetRecognizeCommands, RecognizeResult
+from single_target_recognize_commands import (
+    SingleTargetRecognizeCommands,
+    RecognizeResult,
+)
 
 # sys.path.insert(
 #     0, "/home/mark/tinyspeech_harvard/tensorflow/tensorflow/examples/speech_commands/"
@@ -37,10 +40,9 @@ from single_target_recognize_commands import SingleTargetRecognizeCommands, Reco
 import batch_streaming_analysis as sa
 
 
-#%%
+# %%
 
 tf.config.list_physical_devices("GPU")
-
 
 
 # %%
@@ -52,7 +54,7 @@ target = "ychydig"
 
 model_settings = input_data.standard_microspeech_model_settings(label_count=3)
 sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_sentence_experiments/")
-#sse = pathlib.Path("/home/mark/tinyspeech_harvard/multilingual_streaming_sentence_experiments/")
+# sse = pathlib.Path("/home/mark/tinyspeech_harvard/multilingual_streaming_sentence_experiments/")
 base_dir = sse / target
 model_dir = sse / target / "model"
 model_name = os.listdir(model_dir)[0]
@@ -62,13 +64,13 @@ model_path = model_dir / model_name
 print(model_path)
 wav_path = base_dir / "stream.wav"
 ground_truth_path = base_dir / "labels.txt"
-#wav_path = base_dir / "per_word" / "iaith2" / "streaming_test.wav"
-#ground_truth_path = base_dir / "per_word" / "iaith2" / "streaming_labels.txt"
+# wav_path = base_dir / "per_word" / "iaith2" / "streaming_test.wav"
+# ground_truth_path = base_dir / "per_word" / "iaith2" / "streaming_labels.txt"
 
 DESTINATION_RESULTS_PKL = base_dir / "stream_results.pkl"
 DESTINATION_INFERENCES = base_dir / "raw_inferences.npy"
-#DESTINATION_RESULTS_PKL = base_dir / "per_word" / "iaith2" / "stream_results.pkl"
-#DESTINATION_INFERENCES = base_dir / "per_word" / "iaith2" / "raw_inferences.npy"
+# DESTINATION_RESULTS_PKL = base_dir / "per_word" / "iaith2" / "stream_results.pkl"
+# DESTINATION_INFERENCES = base_dir / "per_word" / "iaith2" / "raw_inferences.npy"
 print("SAVING results TO\n", DESTINATION_RESULTS_PKL)
 print("SAVING inferences TO\n", DESTINATION_INFERENCES)
 
@@ -90,9 +92,9 @@ flags = FlagTest(
     ground_truth=str(ground_truth_path),
     target_keyword=target,
     detection_thresholds=np.linspace(0, 1, 21).tolist(),  # step threshold 0.05
-    #detection_thresholds=threshs,  # step threshold 0.05
-    #detection_thresholds=[0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.65, 0.7, 0.75, 0.8],  # step threshold 0.05
-    #detection_thresholds=[0.55,0.6, 0.65, 0.7],  # step threshold 0.05
+    # detection_thresholds=threshs,  # step threshold 0.05
+    # detection_thresholds=[0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.65, 0.7, 0.75, 0.8],  # step threshold 0.05
+    # detection_thresholds=[0.55,0.6, 0.65, 0.7],  # step threshold 0.05
 )
 results = {}
 results[target], inferences = calculate_streaming_accuracy(model, model_settings, flags)
@@ -117,38 +119,58 @@ flags = FlagTest(
     ground_truth=str(ground_truth_path),
     target_keyword=target,
     # detection_thresholds=np.linspace(0, 1, 21).tolist(),  # step threshold 0.05
-    #detection_thresholds=threshs,  # step threshold 0.05
-    detection_thresholds=[0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],  # step threshold 0.05
+    # detection_thresholds=threshs,  # step threshold 0.05
+    detection_thresholds=[
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95,
+    ],  # step threshold 0.05
     # detection_thresholds=[0.55,0.6, 0.65, 0.7],  # step threshold 0.05
 )
 results = {}
-results[target], _ = calculate_streaming_accuracy(model, model_settings, flags, existing_inferences=existing_inferences)
+results[target], _ = calculate_streaming_accuracy(
+    model, model_settings, flags, existing_inferences=existing_inferences
+)
 print(len(results[target].keys()))
 
 
-#%%
+# %%
 assert not os.path.isfile(DESTINATION_RESULTS_PKL), "results already present"
 print("saving to", DESTINATION_RESULTS_PKL)
 with open(DESTINATION_RESULTS_PKL, "wb") as fh:
     pickle.dump(results, fh)
 
 
-
-#%%
+# %%
 ############################################################################
 #    batch streaming tests: [full sentence, individual-word]
 ############################################################################
 
-#sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_batch_sentences/")
+# sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_batch_sentences/")
 sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_batch_perword/")
-for ix,target in enumerate(os.listdir(sse)):
+for ix, target in enumerate(os.listdir(sse)):
     if not os.path.isdir(sse / target):
         continue
     print(f":::::::::::::::: {ix} ::::::::: - {target}")
     base_dir = sse / target
     model_dir = sse / target / "model"
     if not os.path.isdir(model_dir):
-        print("skipping", target, "may be a word used for the embedding or unknown words")
+        print(
+            "skipping", target, "may be a word used for the embedding or unknown words"
+        )
         continue
     model_name = os.listdir(model_dir)[0]
     assert len(os.listdir(model_dir)) == 1, "multiple models?"
@@ -156,8 +178,8 @@ for ix,target in enumerate(os.listdir(sse)):
     model_path = model_dir / model_name
     print(model_path)
 
-    #wav_path = base_dir / "stream.wav"
-    #ground_truth_path = base_dir / "labels.txt"
+    # wav_path = base_dir / "stream.wav"
+    # ground_truth_path = base_dir / "labels.txt"
     wav_path = base_dir / "streaming_test.wav"
     ground_truth_path = base_dir / "streaming_labels.txt"
 
@@ -172,7 +194,7 @@ for ix,target in enumerate(os.listdir(sse)):
     if os.path.isfile(DESTINATION_INFERENCES):
         print("inferences already present")
         loaded_inferences = np.load(DESTINATION_INFERENCES)
-        inferences_exist=True
+        inferences_exist = True
     else:
         print("SAVING inferences TO\n", DESTINATION_INFERENCES)
 
@@ -190,11 +212,15 @@ for ix,target in enumerate(os.listdir(sse)):
     start = datetime.datetime.now()
     results = {}
     if inferences_exist:
-        results[target], _ = calculate_streaming_accuracy(model, model_settings, flags, loaded_inferences)
+        results[target], _ = calculate_streaming_accuracy(
+            model, model_settings, flags, loaded_inferences
+        )
     else:
-        results[target], inferences = calculate_streaming_accuracy(model, model_settings, flags)
+        results[target], inferences = calculate_streaming_accuracy(
+            model, model_settings, flags
+        )
     end = datetime.datetime.now()
-    print("elapsed time:", end-start)
+    print("elapsed time:", end - start)
 
     with open(DESTINATION_RESULTS_PKL, "wb") as fh:
         pickle.dump(results, fh)
@@ -202,7 +228,7 @@ for ix,target in enumerate(os.listdir(sse)):
         np.save(DESTINATION_INFERENCES, inferences)
 ##############################################################################3
 
-#%%
+# %%
 # undo batch (dangerous)
 # sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_batch_sentences/")
 # for ix,target in enumerate(os.listdir(sse)):
@@ -212,22 +238,31 @@ for ix,target in enumerate(os.listdir(sse)):
 #         print("REMOVING", DESTINATION_RESULTS_PKL)
 #         #os.remove(DESTINATION_RESULTS_PKL)
 
-#%%
+
+# %%
 def multi_streaming_FRR_FAR_curve(
     multi_results,
     time_tolerance_ms=1500,
 ):
     fig, ax = plt.subplots()
-    for results_for_target, target, target_lang, num_nontarget_words, duration_s in multi_results:
-        false_rejection_rates, false_accepts_secs, threshs= [], [], []
-        for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(results_for_target.items()):
+    for (
+        results_for_target,
+        target,
+        target_lang,
+        num_nontarget_words,
+        duration_s,
+    ) in multi_results:
+        false_rejection_rates, false_accepts_secs, threshs = [], [], []
+        for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(
+            results_for_target.items()
+        ):
             if thresh < 0.15:
                 continue
             groundtruth = stats._gt_occurrence
             gt_target_times = [t for g, t in groundtruth if g == target]
-            #print("gt target occurences", len(gt_target_times))
+            # print("gt target occurences", len(gt_target_times))
             found_target_times = [t for f, t in found_words if f == target]
-            #print("num found targets", len(found_target_times))
+            # print("num found targets", len(found_target_times))
 
             # find false negatives
             false_negatives = 0
@@ -265,12 +300,12 @@ def multi_streaming_FRR_FAR_curve(
                     else:
                         true_positives += 1
             if true_positives > len(gt_target_times):
-                true_positives = len(gt_target_times)            # if thresh < 0.2:
+                true_positives = len(gt_target_times)  # if thresh < 0.2:
             #     continue
             tpr = true_positives / len(gt_target_times)
             false_rejections_per_instance = false_negatives / len(gt_target_times)
-            print("thresh", thresh,false_rejections_per_instance)
-            #print("thresh", thresh, "true positives ", true_positives, "TPR:", tpr)
+            print("thresh", thresh, false_rejections_per_instance)
+            # print("thresh", thresh, "true positives ", true_positives, "TPR:", tpr)
             # TODO(MMAZ) is there a beter way to calculate false positive rate?
             # fpr = false_positives / (false_positives + true_negatives)
             # fpr = false_positives / negatives
@@ -280,7 +315,7 @@ def multi_streaming_FRR_FAR_curve(
             # )
             fpr = false_positives / num_nontarget_words
             false_accepts_per_seconds = false_positives / (duration_s / (3600))
-            # print("thresh", thresh, 
+            # print("thresh", thresh,
             #     "FPR",
             #     f"{fpr:0.2f} {false_positives} false positives/{num_nontarget_words} nontarget words",
             # )
@@ -288,25 +323,32 @@ def multi_streaming_FRR_FAR_curve(
             threshs.append(thresh)
             false_accepts_secs.append(false_accepts_per_seconds)
             false_rejection_rates.append(false_rejections_per_instance)
-        ax.plot(false_accepts_secs, false_rejection_rates, label=f"{target} ({target_lang})")
+        ax.plot(
+            false_accepts_secs, false_rejection_rates, label=f"{target} ({target_lang})"
+        )
 
     # ax.set_xlim(left=-5)
     # ax.set_ylim([0,1.0])
     ax.set_xlim(left=-5, right=200)
-    ax.set_ylim([-0.001,0.4])
+    ax.set_ylim([-0.001, 0.4])
     ax.legend(loc="upper right")
     ax.set_xlabel("False accepts / hour")
     ax.set_ylabel("False rejections / instance")
     # ax.set_xlim([175000,200000])
     fig.set_size_inches(15, 15)
-    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_legend().get_texts() +
-                ax.get_xticklabels() + ax.get_yticklabels()):
+    for item in (
+        [ax.title, ax.xaxis.label, ax.yaxis.label]
+        + ax.get_legend().get_texts()
+        + ax.get_xticklabels()
+        + ax.get_yticklabels()
+    ):
         item.set_fontsize(20)
     # ax.set_title(
     #     f"{target} -> threshold: {threshold:0.2f}, TPR: {tpr}, FPR: {fpr_s}, false positives: {false_positives}, false_negatives: {false_negatives}, groundtruth positives: {len(gt_target_times)}"
     # )
     # fig.savefig(f"/home/mark/tinyspeech_harvard/tmp/analysis/{target}/{target}_{threshold:0.2f}.png",dpi=300)
     return fig, ax
+
 
 frequent_words = Path("/home/mark/tinyspeech_harvard/frequent_words/")
 multi_results = []
@@ -327,7 +369,7 @@ for target in os.listdir(sse):
                 if word == target:
                     target_lang = lang
                     break
-        with open(sse /target/ "streaming_labels.txt") as fh:
+        with open(sse / target / "streaming_labels.txt") as fh:
             ls = fh.readlines()
         n_nontargets = [l.split(",")[0] for l in ls].count("_unknown_")
         duration_s = sox.file_info.duration(sse / target / "streaming_test.wav")
@@ -338,20 +380,22 @@ for target in os.listdir(sse):
         n_nontargets = sdata["num_non_target_words_in_stream"]
         target_lang = sdata["target_lang"]
         duration_s = sox.file_info.duration(sse / target / "stream.wav")
-    multi_results.append((results[target], target, target_lang, n_nontargets, duration_s))
+    multi_results.append(
+        (results[target], target, target_lang, n_nontargets, duration_s)
+    )
 multi_streaming_FRR_FAR_curve(multi_results)
 
 #############################################################################
 
-#%%
+# %%
 
-#%%
+# %%
 found_words_w_confidences = results[target][0.65][2]
 with open(base_dir / f"found_words_w_confidences_{target}.py", "wb") as fh:
     pickle.dump(found_words_w_confidences, fh)
 
 
-#%%
+# %%
 target = "merchant"
 
 sse = pathlib.Path("/home/mark/tinyspeech_harvard/streaming_sentence_experiments/")
@@ -365,8 +409,8 @@ print(model_path)
 DESTINATION = base_dir / "stream_results.pkl"
 print("SAVING TO", DESTINATION)
 
-#%%
-#%%
+# %%
+# %%
 tf.get_logger().setLevel(logging.ERROR)
 model = tf.keras.models.load_model(model_path)
 tf.get_logger().setLevel(logging.INFO)
@@ -380,7 +424,7 @@ flags = FlagTest(
     ground_truth=str(base_dir / "labels.txt"),
     target_keyword=target,
     # detection_thresholds=np.linspace(0, 1, 21).tolist(),  # step threshold 0.05
-    #detection_thresholds=threshs,  # step threshold 0.05
+    # detection_thresholds=threshs,  # step threshold 0.05
     detection_thresholds=[0.65],  # step threshold 0.05
 )
 results = {}
@@ -390,7 +434,7 @@ with open(DESTINATION, "wb") as fh:
     pickle.dump(results, fh)
 np.save(base_dir / "raw_inferences.npy", inferences)
 
-#%%
+# %%
 merchant_video = Path("/home/mark/tinyspeech_harvard/merchant_video/")
 merchant_wav = merchant_video / "stream.wav"
 # t_min = 0.4
@@ -407,10 +451,10 @@ flags = FlagTest(
 model_settings = input_data.standard_microspeech_model_settings(3)
 res = generate_inferences_offline(None, model_settings, flags)
 res.shape
-#%%
+# %%
 model_settings
 
-#%%
+# %%
 
 # threshold=0.6
 # flags = FlagTest(
@@ -428,7 +472,7 @@ model_settings
 #     pickle.dump(results, fh)
 
 
-#%%
+# %%
 ##############################
 ### VISUALIZE STREAM TIMELINE
 ##############################
@@ -536,11 +580,11 @@ def viz_stream_timeline(
     return fig, ax
 
 
-#%%
+# %%
 
-#sse = "/home/mark/tinyspeech_harvard/streaming_sentence_experiments/"
-#res = sse + "old_merchant_5_shot/stream_results.pkl"
-#target = "ychydig"
+# sse = "/home/mark/tinyspeech_harvard/streaming_sentence_experiments/"
+# res = sse + "old_merchant_5_shot/stream_results.pkl"
+# target = "ychydig"
 target = "ddechrau"
 res = sse / target / "stream_results.pkl"
 # res = sse / target / "per_word" / "iaith2" / "stream_results.pkl"
@@ -550,13 +594,16 @@ for ix, thresh in enumerate(results[target].keys()):
     print(ix, thresh)
 
 thresh_ix = 9
-thresh, (stats, all_found_words, all_found_w_confidences) = list(results[target].items())[thresh_ix]
+thresh, (stats, all_found_words, all_found_w_confidences) = list(
+    results[target].items()
+)[thresh_ix]
 print("THRESH", thresh)
 fig, ax = viz_stream_timeline(
     stats._gt_occurrence, all_found_words, target, thresh, num_nontarget_words=None
 )
 
-#%%
+# %%
+
 
 def roc_curve_streaming(
     results_for_target,
@@ -566,15 +613,17 @@ def roc_curve_streaming(
     time_tolerance_ms=1500,
 ):
     fig, ax = plt.subplots()
-    fprs, tprs, threshs= [], [], []
-    for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(results_for_target.items()):
+    fprs, tprs, threshs = [], [], []
+    for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(
+        results_for_target.items()
+    ):
         if ix == 0:
             continue
         groundtruth = stats._gt_occurrence
         gt_target_times = [t for g, t in groundtruth if g == target]
-        #print("gt target occurences", len(gt_target_times))
+        # print("gt target occurences", len(gt_target_times))
         found_target_times = [t for f, t in found_words if f == target]
-        #print("num found targets", len(found_target_times))
+        # print("num found targets", len(found_target_times))
 
         # find false negatives
         false_negatives = 0
@@ -623,7 +672,9 @@ def roc_curve_streaming(
         #     false_positives,
         # )
         fpr = false_positives / num_nontarget_words
-        print("thresh", thresh, 
+        print(
+            "thresh",
+            thresh,
             "FPR",
             f"{fpr:0.2f} {false_positives} false positives/{num_nontarget_words} nontarget words",
         )
@@ -632,8 +683,8 @@ def roc_curve_streaming(
         fprs.append(fpr)
         tprs.append(tpr)
 
-    ax.set_xlim([0,1.01])
-    ax.set_ylim([0,1.01])
+    ax.set_xlim([0, 1.01])
+    ax.set_ylim([0, 1.01])
     ax.plot(fprs, tprs)
     # ax.set_xlim([175000,200000])
     fig.set_size_inches(15, 15)
@@ -642,6 +693,7 @@ def roc_curve_streaming(
     # )
     # fig.savefig(f"/home/mark/tinyspeech_harvard/tmp/analysis/{target}/{target}_{threshold:0.2f}.png",dpi=300)
     return fig, ax
+
 
 target = "ychydig"
 res = sse / target / "stream_results.pkl"
@@ -655,7 +707,8 @@ n_nontargets = sdata["num_non_target_words_in_stream"]
 duration_s = sox.file_info.duration(sse / target / "stream.wav")
 roc_curve_streaming(results[target], target, n_nontargets, duration_s)
 
-#%%
+
+# %%
 def streaming_FRR_FAR_curve(
     results_for_target,
     target,
@@ -664,15 +717,17 @@ def streaming_FRR_FAR_curve(
     time_tolerance_ms=1500,
 ):
     fig, ax = plt.subplots()
-    false_rejection_rates, false_accepts_secs, threshs= [], [], []
-    for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(results_for_target.items()):
+    false_rejection_rates, false_accepts_secs, threshs = [], [], []
+    for ix, (thresh, (stats, found_words, all_found_w_confidences)) in enumerate(
+        results_for_target.items()
+    ):
         if thresh < 0.2:
             continue
         groundtruth = stats._gt_occurrence
         gt_target_times = [t for g, t in groundtruth if g == target]
-        #print("gt target occurences", len(gt_target_times))
+        # print("gt target occurences", len(gt_target_times))
         found_target_times = [t for f, t in found_words if f == target]
-        #print("num found targets", len(found_target_times))
+        # print("num found targets", len(found_target_times))
 
         # find false negatives
         false_negatives = 0
@@ -713,8 +768,8 @@ def streaming_FRR_FAR_curve(
             true_positives = len(gt_target_times)
         tpr = true_positives / len(gt_target_times)
         false_rejections_per_instance = false_negatives / len(gt_target_times)
-        print("thresh", thresh,false_rejections_per_instance)
-        #print("thresh", thresh, "true positives ", true_positives, "TPR:", tpr)
+        print("thresh", thresh, false_rejections_per_instance)
+        # print("thresh", thresh, "true positives ", true_positives, "TPR:", tpr)
         # TODO(MMAZ) is there a beter way to calculate false positive rate?
         # fpr = false_positives / (false_positives + true_negatives)
         # fpr = false_positives / negatives
@@ -724,7 +779,7 @@ def streaming_FRR_FAR_curve(
         # )
         fpr = false_positives / num_nontarget_words
         false_accepts_per_seconds = false_positives / duration_s
-        # print("thresh", thresh, 
+        # print("thresh", thresh,
         #     "FPR",
         #     f"{fpr:0.2f} {false_positives} false positives/{num_nontarget_words} nontarget words",
         # )
@@ -734,8 +789,8 @@ def streaming_FRR_FAR_curve(
         false_rejection_rates.append(false_rejections_per_instance)
     ax.plot(false_accepts_secs, false_rejection_rates)
 
-    ax.set_xlim([0,1.01])
-    ax.set_ylim([0,1.01])
+    ax.set_xlim([0, 1.01])
+    ax.set_ylim([0, 1.01])
     ax.set_xlabel("False accepts / sec")
     ax.set_ylabel("False rejections / instance")
     # ax.set_xlim([175000,200000])
@@ -745,6 +800,7 @@ def streaming_FRR_FAR_curve(
     # )
     # fig.savefig(f"/home/mark/tinyspeech_harvard/tmp/analysis/{target}/{target}_{threshold:0.2f}.png",dpi=300)
     return fig, ax
+
 
 target = "ychydig"
 res = sse / target / "stream_results.pkl"
@@ -758,9 +814,9 @@ n_nontargets = sdata["num_non_target_words_in_stream"]
 duration_s = sox.file_info.duration(sse / target / "stream.wav")
 streaming_FRR_FAR_curve(results[target], target, n_nontargets, duration_s)
 
-#%%
+# %%
 
-#%%
+# %%
 ############################################################################
 #    Speech Commands
 ############################################################################
@@ -790,15 +846,15 @@ for modelname in scmodels:
 # with open(DESTINATION, "wb") as fh:
 #     pickle.dump(results, fh)
 
-#%%
+# %%
 scanalysisdir = "/home/mark/tinyspeech_harvard/xfer_speechcommands_5/"
 with open(scanalysisdir + "streaming_results_w_words.pkl", "rb") as fh:
     results = pickle.load(fh)
 
-#%%
+# %%
 os.listdir(scmodeldir)
 
-#%% analyze short tree
+# %% analyze short tree
 tf.get_logger().setLevel(logging.ERROR)
 model = tf.keras.models.load_model(
     scmodeldir + "xfer_5_shot_6_epochs_tree_val_acc_0.93"
@@ -815,14 +871,14 @@ flags = FlagTest(
 results = {}
 results[target] = calculate_streaming_accuracy(model, model_settings, FLAGS=flags)
 
-#%%
+# %%
 print("---")
 
-#%%
+# %%
 
 
-#%%
-# Why do the curves drop here? is Y-axis not the TPR? 
+# %%
+# Why do the curves drop here? is Y-axis not the TPR?
 # is it possible this is happening instead?
 # (number of ALL model positives, both true and false ones)/(# of groundtruth positives)
 # seems to not be the case, i am using n_correct / n_targets
@@ -871,7 +927,7 @@ fig.update_yaxes(range=[0, 1])
 fig
 
 
-#%%  long pauses between also
+# %%  long pauses between also
 ############################################################################
 modelname = "xfer_5_shot_6_epochs_also_val_acc_0.89"
 model_path = f"/home/mark/tinyspeech_harvard/xfer_efnet_5/models/{modelname}"
@@ -891,12 +947,12 @@ results = {}
 results["also"] = calculate_streaming_accuracy(model, audio_dataset, FLAGS=flags)
 
 
-#%%
+# %%
 
 
 ##############################################################################
 
-#%% COLLECT AGGREGATE STATS
+# %% COLLECT AGGREGATE STATS
 
 DESTINATION = "/home/mark/tinyspeech_harvard/xfer_efnet_5/streaming_stats_fast.pkl"
 
@@ -938,13 +994,13 @@ with open(DESTINATION, "wb") as fh:
     pickle.dump(full_results, fh)
 print("FULL RESULTS DONE")
 
-#%%
+# %%
 for resultname, results_per_threshold in full_results.items():
     print(resultname)
     target_match_over_gt_positives = []
     false_positives_over_silence_or_unknown = []
     thresh_labels = []
-    for (thresh, stats) in results_per_threshold.items():
+    for thresh, stats in results_per_threshold.items():
         target = stats[0]
         statdict = stats[2]
         n_targets = statdict["num_groundtruth_target"]
@@ -959,14 +1015,14 @@ for resultname, results_per_threshold in full_results.items():
     break
 
 
-#%%
+# %%
 fig = go.Figure()
 for resultname, results_per_threshold in full_results.items():
     print(resultname)
     target_match_over_gt_positives = []
     false_positives_over_silence_or_unknown = []
     thresh_labels = []
-    for (thresh, stats) in results_per_threshold.items():
+    for thresh, stats in results_per_threshold.items():
         target = stats[0]
         statdict = stats[2]
         n_targets = statdict["num_groundtruth_target"]
@@ -997,16 +1053,18 @@ fig.update_xaxes(range=[0, 1])
 fig.update_yaxes(range=[0, 1])
 fig
 
-#%%
+# %%
 fig.write_html(
     "/home/mark/tinyspeech_harvard/xfer_efnet_5/streaming_performance_aggregate.html"
 )
 
 
-#%%
+# %%
 with np.printoptions(precision=3, suppress=True):
     pprint.pprint(full_results)
-#%%
+
+
+# %%
 def markstats(FLAGS, stats):
     cliplength_s = 600.0  # seconds
     false_accepts_per_second = stats._how_many_fp / cliplength_s
@@ -1027,7 +1085,7 @@ def markstats(FLAGS, stats):
 ######################################################################
 
 
-#%% internals of calculating stats
+# %% internals of calculating stats
 modelname = "xfer_5_shot_6_epochs_also_val_acc_0.89"
 model_path = f"/home/mark/tinyspeech_harvard/xfer_efnet_5/models/{modelname}"
 
@@ -1085,18 +1143,18 @@ for ix, audio_data_offset in enumerate(range(0, audio_data_end, clip_stride_samp
 inferences = model.predict(spectrograms[:, :, :, np.newaxis])
 print("inferences complete")
 
-#%%
+# %%
 
 sys.path.insert(0, "/home/mark/tinyspeech_harvard/tinyspeech/")
 import accuracy_utils as mau
 
-#%%
+# %%
 import importlib
 
 importlib.reload(mau)
 
 
-#%%
+# %%
 
 # for q in stats._gt_occurrence:
 #     if q[1] > 1165640:
@@ -1104,7 +1162,7 @@ importlib.reload(mau)
 
 FLAGS.time_tolerance_ms
 
-#%%
+# %%
 
 
 threshold = 0.15
@@ -1169,13 +1227,13 @@ fpr = n_false_positives / n_silence_unknown
 # thresh_labels.append(f"thresh: {threshold}")
 print(info)
 print("threshold", threshold, "tpr", tpr, "fpr", fpr)
-#%%
+# %%
 print(len(stats._gt_occurrence))
 print(len(all_found_words))
 num_unknowns = len([w for w in all_found_words if w[0] == "_unknown_"])
 print(num_unknowns, num_unknowns / len(all_found_words))
 
-#%%
+# %%
 print(
     {
         "correct_match_percentage": 88.7218045112782,
@@ -1189,13 +1247,13 @@ print(
     }
 )
 
-#%%
+# %%
 afw = [["_unknown_", 2820], ["also", 16580], ["_unknown_", 24980], ["also", 25500]]
 stats._gt_occurrence[:5]
 
-#%%
+# %%
 len(stats._gt_occurrence)
-#%%
+# %%
 gt_u, gt_t = [], []
 for l, t in stats._gt_occurrence:
     if l == "_unknown_":
@@ -1207,7 +1265,7 @@ for l, t in stats._gt_occurrence:
 gt_u = np.array(gt_u)
 gt_t = np.array(gt_t)
 
-#%%
+# %%
 f_u, f_t = [], []
 for l, t in all_found_words:
     if l == "_unknown_":
@@ -1219,7 +1277,7 @@ for l, t in all_found_words:
 f_u = np.array(f_u)
 f_t = np.array(f_t)
 
-#%%
+# %%
 fig, ax = plt.subplots()
 ax.plot(gt_u[:, 0], gt_u[:, 1], label="groundtruth unknown", color="blue")
 ax.fill_between(gt_u[:, 0], gt_u[:, 1], color=(0, 0, 0.8, 0.3))
@@ -1232,4 +1290,3 @@ ax.plot(f_t[:, 0], f_t[:, 1], label="found target", color="purple")
 ax.fill_between(f_t[:, 0], f_t[:, 1], color="purple")
 ax.legend(loc="upper right")
 fig.set_size_inches(30, 5)
-

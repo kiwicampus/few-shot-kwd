@@ -1,4 +1,4 @@
-#%%
+# %%
 from dataclasses import dataclass
 import logging
 import datetime
@@ -83,6 +83,7 @@ def train_process(d: TLData):
 
 
 # %%
+
 
 def generate_and_run():
     # fmt: off
@@ -218,6 +219,7 @@ def resume_run():
         p.join()
         end = datetime.datetime.now()
         print(f"\n\n::::::: {ix} / {total} elapsed time", end - start, "\n\n")
+
 
 if __name__ == "__main__":
     resume_run()

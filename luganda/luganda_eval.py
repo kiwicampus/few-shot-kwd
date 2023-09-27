@@ -1,4 +1,4 @@
-#%%
+# %%
 import os
 import glob
 import shutil
@@ -31,6 +31,7 @@ sns.set()
 sns.set_style("whitegrid")
 sns.set_palette("bright")
 
+
 def count_nontarget_words(keyword, groundtruth):
     num_nontarget_words = 0
     for wav in groundtruth["stream_data"]:
@@ -43,7 +44,7 @@ def count_nontarget_words(keyword, groundtruth):
 workdir = Path("/home/mark/tinyspeech_harvard/luganda")
 evaldir = workdir / "cs288_eval"
 hpsweep = workdir / "hp_sweep"
-#hpsweep = workdir / "export"
+# hpsweep = workdir / "export"
 # evaldir = workdir / "cs288_test"
 # hpsweep = workdir / "tt_sweep"
 
@@ -62,9 +63,9 @@ for kw in os.listdir(evaldir):
         duration_s=duration_s,
     )
 
-#%%
+# %%
 eval_data["mask"]["times"]
-#%%
+# %%
 
 lugandamap = {
     "corona": "kolona",
@@ -103,7 +104,7 @@ for exp in os.listdir(hpsweep):
             for thresh, (found_words, _) in results_per_thresh.items():
                 if thresh < 0.3:
                     continue
-                #print(thresh)
+                # print(thresh)
                 analysis = tpr_fpr(
                     keyword,
                     thresh,
@@ -149,21 +150,24 @@ AX_LIM = 0.0
 if not use_mpl:
     SIZE = 700
     fig.update_layout(
-        #xaxis_title="FPR",
+        # xaxis_title="FPR",
         xaxis_title="False accepts/hour",
         yaxis_title="TPR",
         title=f"streaming accuracy",
         width=SIZE,
         height=SIZE,
     )
-    #fig.update_xaxes(range=[0, 1 - AX_LIM])
+    # fig.update_xaxes(range=[0, 1 - AX_LIM])
     fig.update_xaxes(range=[0, 400])
     fig.update_yaxes(range=[AX_LIM, 1])
     fig.show()
-    #fig.write_html("/home/mark/tinyspeech_harvard/tinyspeech_images/mask_search.html")
+    # fig.write_html("/home/mark/tinyspeech_harvard/tinyspeech_images/mask_search.html")
 else:
     ax.axvline(
-        x=50, label=f"nominal cutoff for false accepts", linestyle="--", color="black",
+        x=50,
+        label=f"nominal cutoff for false accepts",
+        linestyle="--",
+        color="black",
     )
 
     # ax.set_xlim(0, 1 - AX_LIM)

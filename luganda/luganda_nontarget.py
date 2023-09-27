@@ -42,7 +42,9 @@ assert not os.path.isfile(groundtruth_data), "already exists"
 NUM_WAVS = 160
 
 # select random wavs without keyword to intersperse stream with
-keywords_to_exclude = set(["corona", "korona", "kolona", "coronavirus", "mask", "masiki", "masks" ])
+keywords_to_exclude = set(
+    ["corona", "korona", "kolona", "coronavirus", "mask", "masiki", "masks"]
+)
 non_targets = []
 with open(l_csv, "r") as fh:
     reader = csv.reader(fh)
@@ -95,7 +97,7 @@ with open(groundtruth_data, "wb") as fh:
 
 # %%
 groundtruth_data = workdir / "cs288_eval" / "nontarget" / "nontarget_groundtruth.pkl"
-with open(groundtruth_data, 'rb') as fh:
+with open(groundtruth_data, "rb") as fh:
     groundtruth = pickle.load(fh)
 
 for stream_segment in groundtruth["stream_data"]:

@@ -257,7 +257,7 @@ import protoc_pb2
 
 
 def serialize_vectors(fps_vecs, samples, sample_type):
-    for (fp, vec) in fps_vecs:
+    for fp, vec in fps_vecs:
         sample = samples.samples.add()
         sample.sample_type = sample_type
         sample.sample_id = fp
@@ -341,7 +341,7 @@ print("Feature vector shape:", feature_vecs.shape)
 
 # %%
 
-#rel_pos = Path.home() / "tinyspeech_harvard/dataperf/mswc_microset_wav"
+# rel_pos = Path.home() / "tinyspeech_harvard/dataperf/mswc_microset_wav"
 # print(keyword_samples[0].relative_to(rel_pos))
 # sample_paths = [str(fp.relative_to(rel_pos)) for fp in keyword_samples]
 
@@ -355,7 +355,7 @@ print(len(sample_paths))
 df = pd.DataFrame(
     data=dict(
         clip_id=sample_paths,
-        #mswc_embedding_vector=pd.Series(list(feature_vec), dtype=np.float32),
+        # mswc_embedding_vector=pd.Series(list(feature_vec), dtype=np.float32),
         mswc_embedding_vector=pd.Series(list(feature_vecs)),
     )
 )
@@ -391,7 +391,7 @@ for keyword in tqdm.tqdm(keywords):
 
     samples_str = [str(f) for f in keyword_samples]
     if len(samples_str) == 0:
-        # this is bad news. 
+        # this is bad news.
         # https://github.com/harvard-edge/multilingual_kws/issues/35
         continue
 
@@ -434,7 +434,6 @@ print(uhohs)
 # %%
 
 
-
 # %%
 mswcen = Path("/media/mark/hyperion/mswc/en/clips")
 keywords = list(sorted(os.listdir(mswcen)))
@@ -468,7 +467,9 @@ for b in bads:
 results = []
 for ix, f in enumerate(Path("/media/mark/hyperion/mswc/wavtesting/wavs").iterdir()):
     cmd = f"sox {f} -n stat"
-    out = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out = subprocess.run(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     # change the "\n" to " - " to inline the filename with the number of samples
     res = str(f) + "\n" + out.stdout.decode("utf8") + out.stderr.decode("utf8")
     results.append(res)

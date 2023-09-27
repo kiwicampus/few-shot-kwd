@@ -70,7 +70,8 @@ def cluster_and_sort(
 
     print("evaluating...")
     l2_distances = tf.linalg.norm(
-        kmeans.cluster_centers_[tf.newaxis] - eval_vectors[:, tf.newaxis], axis=-1,
+        kmeans.cluster_centers_[tf.newaxis] - eval_vectors[:, tf.newaxis],
+        axis=-1,
     )
     l2_from_closest_cluster = tf.reduce_min(l2_distances, axis=1).numpy()
 
@@ -81,4 +82,3 @@ def cluster_and_sort(
         distances=l2_from_closest_cluster[sorting],
         train_clips=train_clips,
     )
-

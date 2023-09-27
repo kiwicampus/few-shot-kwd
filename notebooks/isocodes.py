@@ -50,4 +50,3 @@ languages = {
     "Dhivehi": "dv",
     "Lithuanian": "lt",
 }
-

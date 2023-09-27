@@ -38,7 +38,6 @@ print(mr_languages_clean)
 # ['cs', 'nl', 'et', 'eo', 'id', 'ky', 'mn', 'pt', 'tt', 'tr', 'uk']
 
 
-
 # ['ar', 'as', 'br', 'cv', 'zh-CN', 'dv', 'fy-NL', 'ka', 'gn', 'el', 'cnh', 'ha', 'ia', 'ga-IE', 'lv', 'lt', 'mt', 'or', 'ro', 'sah', 'sl', 'sk', 'rm-sursilv', 'ta', 'rm-vallader', 'vi']
 # ['cs', 'nl', 'et', 'eo', 'id', 'ky', 'mn', 'pt', 'sv-SE', 'tt', 'tr', 'uk']
 # %%
@@ -63,9 +62,11 @@ print(mr_languages_clean)
 # %%
 # find common words in indonesian
 c = collections.Counter()
-ds = load_dataset("MLCommons/ml_spoken_words", "id_wav", cache_dir="/media/mark/sol/dpml/")
+ds = load_dataset(
+    "MLCommons/ml_spoken_words", "id_wav", cache_dir="/media/mark/sol/dpml/"
+)
 for d in ds["validation"]:
-    c[d['keyword']] += 1
+    c[d["keyword"]] += 1
 c.most_common(100)
 # %%
 # val count
@@ -75,7 +76,7 @@ for kw in ["karena", "sangat", "bahasa", "belajar", "kemarin"]:
 # train counts:
 # karena: because, 181
 # sangat: very, 159
-# bahasa: language, 135 
+# bahasa: language, 135
 # belajar: study, 107
 # kemarin: yesterday, 103
 # val counts:
@@ -88,9 +89,11 @@ for kw in ["karena", "sangat", "bahasa", "belajar", "kemarin"]:
 # %%
 # find common words in portuguese
 c = collections.Counter()
-ds = load_dataset("MLCommons/ml_spoken_words", "pt_wav", cache_dir="/media/mark/sol/dpml/")
+ds = load_dataset(
+    "MLCommons/ml_spoken_words", "pt_wav", cache_dir="/media/mark/sol/dpml/"
+)
 for d in ds["train"]:
-    c[d['keyword']] += 1
+    c[d["keyword"]] += 1
 c.most_common(100)
 
 # %%

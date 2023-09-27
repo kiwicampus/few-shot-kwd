@@ -13,7 +13,7 @@ import seaborn as sns
 sns.set()
 sns.set_style("white")
 sns.set_palette("bright")
-#%matplotlib inline
+# %matplotlib inline
 
 # %%
 # wlist = os.listdir()
@@ -160,8 +160,16 @@ assert np.allclose((df[ngf] + df[nbf]).values, 50)
 
 df = df[[word, tne, nbc, nbf]]
 
-print("Near WER mean, std", np.mean(df[nbc].values / 50 * 100), np.std(df[nbc].values / 50 * 100))
-print("Far WER mean, st", np.mean(df[nbf].values / 50 * 100), np.std(df[nbf].values / 50 * 100))
+print(
+    "Near WER mean, std",
+    np.mean(df[nbc].values / 50 * 100),
+    np.std(df[nbc].values / 50 * 100),
+)
+print(
+    "Far WER mean, st",
+    np.mean(df[nbf].values / 50 * 100),
+    np.std(df[nbf].values / 50 * 100),
+)
 
 # ES:
 # Near WER mean 4.64

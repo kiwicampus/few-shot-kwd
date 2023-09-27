@@ -36,9 +36,13 @@ class TestParams:
     # max_num_samples_for_selection: int = 300 # TODO(mmaz) (how) should we enforce this?
     num_target_samples: int = 100
 
-    minimum_samples_for_nontarget_words: int = 200  # nontarget samples do not follow MSWC train/dev/test splits
+    minimum_samples_for_nontarget_words: int = (
+        200  # nontarget samples do not follow MSWC train/dev/test splits
+    )
     num_nontarget_training_words: int = 100
-    num_nontarget_eval_words: int = 100  # distinct words the model has not been trained on as nontarget
+    num_nontarget_eval_words: int = (
+        100  # distinct words the model has not been trained on as nontarget
+    )
 
     SEED_EXPERIMENT_GENERATION: int = 0
     SEED_NONTARGET_SELECTION: int = 0
@@ -71,6 +75,8 @@ with open(splits_file, "r") as fh:
         word = row[2]
         split = row[0].lower()
         sample2split[Path(clip).name] = dict(word=word, split=split)
+
+
 # %%
 def train_dev_test(word):
     """
@@ -160,7 +166,7 @@ def read_parquet(word, parquet_basedir=Path("/media/mark/hyperion/mswc/embedding
 
 
 def get_fvs_by_split(word):
-    """ look up feature vectors by split
+    """look up feature vectors by split
     Returns: dict[str,np.ndarray]
         for example:
           weather: {train: (970, 1024), dev:, test:, ...}
@@ -189,8 +195,8 @@ def get_unknown_fvs(target_words: set[str]):
         TestParams.num_nontarget_training_words + TestParams.num_nontarget_eval_words,
         replace=False,
     )
-    train_unknowns = selected_unknowns[:TestParams.num_nontarget_training_words]
-    eval_unknowns = selected_unknowns[:TestParams.num_nontarget_training_words]
+    train_unknowns = selected_unknowns[: TestParams.num_nontarget_training_words]
+    eval_unknowns = selected_unknowns[: TestParams.num_nontarget_training_words]
 
     missing_unknowns = 0
     selected_fvs = []

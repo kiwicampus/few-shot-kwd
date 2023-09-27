@@ -1,4 +1,4 @@
-#%%
+# %%
 import os
 import glob
 import shutil
@@ -59,6 +59,7 @@ with open(ok_test_unknown_f, "w") as fh:
 train_dest = Path("/mnt/disks/std750/mark/msc_other_files/train/")
 test_dest = Path("/mnt/disks/std750/mark/msc_other_files/test/")
 
+
 def convert_16k_wav(file_destdir):
     f = file_destdir[0]
     destdir = file_destdir[1]
@@ -72,6 +73,7 @@ def convert_16k_wav(file_destdir):
     transformer.build(f, str(dest))
     return f
 
+
 for files, dest in zip([ok_train_unknown, ok_test_unknown], [train_dest, test_dest]):
     files_dests = [(f, dest) for f in files]
     print(files_dests)
@@ -82,7 +84,7 @@ for files, dest in zip([ok_train_unknown, ok_test_unknown], [train_dest, test_de
             done.append(f)
     print(len(done))
 
-    
+
 # %%
 f = ok_test_unknown[0]
 Path(f).parts[-2]
@@ -90,6 +92,7 @@ Path(f).parts[-2]
 basedir = Path.cwd()
 original = basedir / "orig_gsc_msc"
 target = basedir / "gsc_msc"
+
 
 def convert_16k_wav_dir(word):
     os.makedirs(target / word, exist_ok=True)
@@ -99,7 +102,9 @@ def convert_16k_wav_dir(word):
         transformer.convert(samplerate=16000)  # from 48K mp3s
         transformer.build(wav, str(dest))
     return word
-# below is per directory, way slower than above which works per-file 
+
+
+# below is per directory, way slower than above which works per-file
 with multiprocessing.Pool() as p:
     for i in p.imap_unordered(convert_16k_wav_dir, os.listdir(original)):
         print(i)

@@ -105,6 +105,7 @@ for w in train_wavs:
 # %%
 # find duplicates
 
+
 # https://stackoverflow.com/a/32558749
 def levenshteinDistance(s1, s2):
     if len(s1) > len(s2):
@@ -124,10 +125,10 @@ def levenshteinDistance(s1, s2):
 
 
 keyword = "senyiga"
-#data = Path("/media/mark/hyperion/makerere/alignment/cs288")
+# data = Path("/media/mark/hyperion/makerere/alignment/cs288")
 data = Path("/media/mark/hyperion/makerere/alignment/covid")
 alignments = data / "alignments"
-#clips = data / "cs288_clips"
+# clips = data / "cs288_clips"
 clips = data / "covid_clips"
 alignment_speakers = [
     d for d in os.listdir(alignments) if os.path.isdir(alignments / d)
@@ -168,7 +169,7 @@ print("total", len(paths_for_deletion))
 
 # %%
 # listen to duplicates
-for (o, d) in zip(original, paths_for_deletion):
+for o, d in zip(original, paths_for_deletion):
     w1 = clips / f"{o.name}/{o.name}.wav"
     w2 = clips / f"{d.name}/{d.name}.wav"
     print(w1)
@@ -182,12 +183,14 @@ for (o, d) in zip(original, paths_for_deletion):
 for d in paths_for_deletion:
     cmd = f"rm -rf {d}"
     print(cmd)
-    #subprocess.run(cmd, shell=True)
+    # subprocess.run(cmd, shell=True)
 
 # %%
 # repackage unknown files
 
-with open("/home/mark/tinyspeech_harvard/multilingual_embedding_wc/unknown_files.txt", 'r') as fh:
+with open(
+    "/home/mark/tinyspeech_harvard/multilingual_embedding_wc/unknown_files.txt", "r"
+) as fh:
     unknown_files = fh.read().splitlines()
 
 
@@ -206,12 +209,12 @@ for f in unknown_files:
 
 f = "/media/mark/hyperion/kws_data/unknown_files.txt"
 assert not os.path.exists(f), "already present"
-with open(f, 'w') as fh:
+with open(f, "w") as fh:
     for w in unknown_list:
         fh.write(str(w) + "\n")
 
 # %%
-with open("/media/mark/hyperion/kws_data/unknown_files.txt", 'r') as fh:
+with open("/media/mark/hyperion/kws_data/unknown_files.txt", "r") as fh:
     unknown_files = fh.read().splitlines()
 for f in unknown_files:
     if not os.path.exists("/media/mark/hyperion/kws_data/" + f):

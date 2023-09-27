@@ -1,7 +1,7 @@
-
 from dataclasses import dataclass, field, asdict
 import os
 from typing import List, Optional, Tuple
+
 
 @dataclass
 class WavTranscript:

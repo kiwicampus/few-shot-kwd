@@ -1,4 +1,4 @@
-#%%
+# %%
 import numpy as np
 import os
 import glob
@@ -100,7 +100,7 @@ def select_samples(
     )
 
     wav_data = []
-    for (target_sample, non_target_sample) in zip(target_stream, non_targets):
+    for target_sample, non_target_sample in zip(target_stream, non_targets):
         target_data = dict(
             is_target=True,
             mp3name_no_ext=target_sample[0],
@@ -310,14 +310,14 @@ def write_full_transcription(
         pickle.dump(full_transcription, fh)
 
 
-#%%
+# %%
 def find_target_counts(target_word, common_counts):
     for ix, (w, c) in enumerate(common_counts):
         if w == target_word:
             print(target_word, ix, c)
 
 
-#%%
+# %%
 
 # TODO(mmaz): choose words + models already trained in paper_data -- exclude mp3file_no_ext in N_SHOTS from timings
 
@@ -331,7 +331,7 @@ paper_data = Path("/home/mark/tinyspeech_harvard/paper_data")
 data_dir = Path("/home/mark/tinyspeech_harvard/frequent_words")
 target_data = []
 target_word_counts = {}
-#multilang_results_dir = paper_data / "multilang_classification"
+# multilang_results_dir = paper_data / "multilang_classification"
 multilang_results_dir = paper_data / "ooe_multilang_classification"
 for multiclass_lang in os.listdir(multilang_results_dir):
     lang_isocode = multiclass_lang.split("_")[-1]
@@ -350,36 +350,47 @@ for multiclass_lang in os.listdir(multilang_results_dir):
         wav_dir = data_dir / lang_isocode / "clips" / target_word
         num_wavs = len(glob.glob(str(wav_dir / "*.wav")))
         target_word_counts[f"{lang_isocode}_{target_word}"] = num_wavs
-        d = (lang_isocode, target_word, multilang_results_dir / multiclass_lang, model_file)
+        d = (
+            lang_isocode,
+            target_word,
+            multilang_results_dir / multiclass_lang,
+            model_file,
+        )
         target_data.append(d)
 print(len(target_word_counts.keys()))
 
-#%%
+# %%
 
-#%%
+# %%
 # number of target wavs per keyword
-fig,ax = plt.subplots()
+fig, ax = plt.subplots()
 ax.bar(target_word_counts.keys(), target_word_counts.values())
 ax.set_xticklabels(target_word_counts.keys(), rotation=90)
 #  # ax.set_xlabel("language")
 #  # ax.set_ylabel("")
-ax.set_ylim(0,800)
-fig.set_size_inches(30,10)
+ax.set_ylim(0, 800)
+fig.set_size_inches(30, 10)
 
-#%%
+# %%
 # use existing models and keywords
 
-#base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/streaming_batch_sentences")
-base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/ooe_streaming_batch_sentences")
+# base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/streaming_batch_sentences")
+base_dir = Path(
+    "/home/mark/tinyspeech_harvard/paper_data/ooe_streaming_batch_sentences"
+)
 frequent_words = Path("/home/mark/tinyspeech_harvard/frequent_words")
 n_targets = len(target_data)
-for ix, (target_lang, target_word, multilang_class_dir, model_file) in enumerate(target_data):
+for ix, (target_lang, target_word, multilang_class_dir, model_file) in enumerate(
+    target_data
+):
     if target_lang == "fr" or target_lang == "rw":
         continue
     print(f"\n\n\n:::::::::::{ix} / {n_targets} ::::::::::: TARGET LANG: {target_lang}")
     start_gen = datetime.datetime.now()
 
-    counts = word_extraction.wordcounts(f"/home/mark/tinyspeech_harvard/common-voice-forced-alignments/{target_lang}/validated.csv")
+    counts = word_extraction.wordcounts(
+        f"/home/mark/tinyspeech_harvard/common-voice-forced-alignments/{target_lang}/validated.csv"
+    )
 
     dest_dir = base_dir / f"streaming_{target_lang}" / f"streaming_{target_word}"
     if os.path.isdir(dest_dir):
@@ -388,11 +399,13 @@ for ix, (target_lang, target_word, multilang_class_dir, model_file) in enumerate
 
     mp3_to_textgrid, timings = timings_for_target(target_word, target_lang)
 
-    if len(timings[target_word]) < 45: # even though we already have a trained model 
+    if len(timings[target_word]) < 45:  # even though we already have a trained model
         print("ERROR: not enough data in timings")
         continue
     # fmt:on
-    sample_data = select_samples(target_word, timings, NUM_SAMPLES_FOR_STREAMING_WAV=40, NUM_SHOTS=5, NUM_VAL=0)
+    sample_data = select_samples(
+        target_word, timings, NUM_SAMPLES_FOR_STREAMING_WAV=40, NUM_SHOTS=5, NUM_VAL=0
+    )
     # fmt:off
 
     n_target_in_stream, n_nontarget_in_stream = count_number_of_non_target_words_in_stream(
@@ -465,7 +478,7 @@ for ix, (target_lang, target_word, multilang_class_dir, model_file) in enumerate
     end_gen = datetime.datetime.now()
     print("elapsed time", end_gen - start_gen)
 
-#%%
+# %%
 ###############################
 ############
 #####
@@ -520,13 +533,16 @@ for ix in range(3):
         continue
     sample_data = select_samples(target_word, timings)
 
-    n_target_in_stream, n_nontarget_in_stream = count_number_of_non_target_words_in_stream(
+    (
+        n_target_in_stream,
+        n_nontarget_in_stream,
+    ) = count_number_of_non_target_words_in_stream(
         target_word, target_lang, sample_data["wav_data"]
     )
     # find cv clips dir
-    cv_clipsdir=None
+    cv_clipsdir = None
     for cv_datadir in ["cv-corpus-6.1-2020-12-11/", "cv-corpus-5.1-2020-06-22"]:
-        #fmt: off
+        # fmt: off
         cv_clipsdir = Path("/media/mark/hyperion/common_voice") / cv_datadir / target_lang / "clips"
         # fmt : on
         if os.path.isdir(cv_clipsdir):
@@ -534,7 +550,6 @@ for ix in range(3):
     if cv_clipsdir is None:
         print("cant find cv data", target_lang)
         continue
-
 
     shot_targets = dest_dir / "n_shots"
     val_targets = dest_dir / "val"
@@ -573,7 +588,12 @@ for ix in range(3):
     )
 
     target_times_s = generate_stream_and_labels(
-        dest_dir, wav_intermediates, sample_data["wav_data"], target_word, target_lang, cv_clipsdir=cv_clipsdir,
+        dest_dir,
+        wav_intermediates,
+        sample_data["wav_data"],
+        target_word,
+        target_lang,
+        cv_clipsdir=cv_clipsdir,
     )
 
     print("saving transcription to", transcript_destination_pkl_file)
@@ -607,7 +627,7 @@ for ix, f in enumerate(audiofiles):
         break
 
 
-#%%
+# %%
 ######################
 # how good are the timings? listen to random extractions from the full stream
 #####################

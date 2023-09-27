@@ -1,4 +1,4 @@
-#%%
+# %%
 from dataclasses import dataclass, asdict
 import os
 import json
@@ -21,6 +21,7 @@ import input_data
 
 import sklearn.model_selection
 
+
 def fakedata_test():
     fakedata = []
     for ci in [chr(i + 65) for i in range(10)]:
@@ -31,6 +32,7 @@ def fakedata_test():
     for train_ix, test_ix in kf.split(fakedata):
         print(test_ix, len(test_ix))
     print("--")
+
 
 @dataclass(frozen=True)
 class SweepData:
@@ -51,7 +53,6 @@ class SweepData:
 
 
 def sweep_run(sd: SweepData, q):
-
     # load embedding model
     traindir = Path(f"/home/mark/tinyspeech_harvard/multilingual_embedding_wc")
 
@@ -59,7 +60,7 @@ def sweep_run(sd: SweepData, q):
     #     unknown_files = fh.read().splitlines()
     unknown_files = []
     unknown_files_dir = Path("/home/mark/tinyspeech_harvard/unknown_files/")
-    with open(unknown_files_dir / "unknown_files.txt", 'r') as fh:
+    with open(unknown_files_dir / "unknown_files.txt", "r") as fh:
         for w in fh.read().splitlines():
             unknown_files.append(str(unknown_files_dir / w))
     base_model_path = traindir / "models" / "multilingual_context_73_0.8011"
@@ -104,7 +105,6 @@ def sweep_run(sd: SweepData, q):
 
 # %%
 if __name__ == "__main__":
-
     workdir = Path("/home/mark/tinyspeech_harvard/luganda")
     t = []
     # akawuka_shots = workdir / "akawuka_extractions"
@@ -119,8 +119,8 @@ if __name__ == "__main__":
     print("---------NUM TRAINING SAMPLES\n", len(t))
 
     streamwav = workdir / "cs288_eval" / target_word / f"{target_word}_stream.wav"
-    #streamwav = workdir / "cs288_test" / target_word / f"{target_word}_stream.wav"
-    #streamwav = workdir / "cs288_eval" / "nontarget" / "nontarget_stream.wav"
+    # streamwav = workdir / "cs288_test" / target_word / f"{target_word}_stream.wav"
+    # streamwav = workdir / "cs288_eval" / "nontarget" / "nontarget_stream.wav"
     assert os.path.isfile(streamwav), "no stream wav"
 
     # reuse train for val
@@ -148,7 +148,6 @@ if __name__ == "__main__":
     #     v = hundred_alignments[val_ixs]
 
     for ix in range(1):
-
         mdd = exp_dir / f"fold_{ix:02d}"
         dp = mdd / "result.pkl"
         di = mdd / "inferences.npy"
@@ -167,7 +166,7 @@ if __name__ == "__main__":
             # average_window_duration_ms = 500
             average_window_duration_ms=100,
             suppression_ms=500,
-            time_tolerance_ms=750, #only used when graphing
+            time_tolerance_ms=750,  # only used when graphing
         )
         streamtarget = sa.StreamTarget(
             target_lang="lu",

@@ -14,6 +14,7 @@ import pickle
 with open("metadata.json", "r") as fh:
     meta = json.load(fh)
 
+
 @dataclass
 class Task:
     clip_dir: Path
@@ -21,9 +22,11 @@ class Task:
     word: str
     basedir: Path
 
+
 target_dir = Path("/mnt/disks/std4/16khz_wav")
 
-def convert_16k_wav(task:Task):
+
+def convert_16k_wav(task: Task):
     wav = Path(task.sample_opus).stem + ".wav"
     original_fp = str(task.basedir / task.word / wav)
     dest = str(task.clip_dir / wav)
@@ -32,7 +35,8 @@ def convert_16k_wav(task:Task):
     transformer.build(original_fp, dest)
     return task
 
-#fmt: off
+
+# fmt: off
 mswc_languages = ['sl', 'br', 'ro', 'rm-sursilv', 'el', 'mt', 'id', 'sah', 'fy-NL', 'cv', 'sk', 'ia', 'lv', 'vi', 'ar', 'as', 'or', 'gn', 'sv-SE', 'dv', 'ta', 'rm-vallader', 'ka', 'zh-CN', 'cnh', 'ha', 'ga-IE', 'ky', 'mn', 'tr', 'lt', 'uk', 'et', 'cs', 'tt', 'pt', 'nl', 'cy', 'ru', 'eo', 'fa', 'eu', 'pl', 'rw', 'ca', 'it', 'de', 'en', 'es', 'fr']
 assert len(mswc_languages) == 50
 
@@ -52,12 +56,14 @@ isocodes_to_process = std2_mswc_langs
 basedir_std3 = "/mnt/disks/std3/data/generated/common_voice/frequent_words/{lang_isocode}/clips"
 basedir_std2 = "/mnt/disks/std2/data/generated/common_voice/frequent_words/{lang_isocode}/clips"
 basedir_template = basedir_std2
-#fmt:on
+# fmt:on
 
 verify = True
 if verify:
     for lang_isocode in isocodes_to_process:
-        print(f"verifying all clips in MSWC metadata are present on disk for {lang_isocode}")
+        print(
+            f"verifying all clips in MSWC metadata are present on disk for {lang_isocode}"
+        )
         basedir = Path(basedir_template.format(lang_isocode))
         uhoh = 0
         considered = 0
@@ -83,7 +89,14 @@ for lang_isocode in isocodes_to_process:
         clip_dir = target_dir / lang_isocode / "clips" / word
         os.makedirs(clip_dir, exist_ok=True)
         for sample_opus in meta[lang_isocode]["filenames"][word]:
-            tasks.append(Task(clip_dir=clip_dir, sample_opus=sample_opus, word=word, basedir=basedir))
+            tasks.append(
+                Task(
+                    clip_dir=clip_dir,
+                    sample_opus=sample_opus,
+                    word=word,
+                    basedir=basedir,
+                )
+            )
 
     total = len(tasks)
     print("tasks:", total)
@@ -96,7 +109,7 @@ for lang_isocode in isocodes_to_process:
             if done % five_pct == 0:
                 print(f"{lang_isocode} {done=} {total=}", done / total)
     now = datetime.datetime.now()
-    with open(f"logs/{lang_isocode}__{now}.log", 'w') as fh:
+    with open(f"logs/{lang_isocode}__{now}.log", "w") as fh:
         fh.write(f"{done}\n")
     print(f"{lang_isocode} all done", done, len(tasks), "pct:", done / len(tasks), now)
 # %%

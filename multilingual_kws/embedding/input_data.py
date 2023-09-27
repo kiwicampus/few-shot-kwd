@@ -49,14 +49,14 @@ def file2spec(model_settings, filepath):
 
 def _next_power_of_two(x):
     """Calculates the smallest enclosing power of two for an input.
-    source: https://git.io/JkuvF
+      source: https://git.io/JkuvF
 
-  Args:
-    x: Positive float or integer number.
+    Args:
+      x: Positive float or integer number.
 
-  Returns:
-    Next largest power of two integer.
-  """
+    Returns:
+      Next largest power of two integer.
+    """
     return 1 if x == 0 else 2 ** (int(x) - 1).bit_length()
 
 
@@ -70,24 +70,24 @@ def prepare_model_settings(
     preprocess,
 ):
     """
-    source: https://git.io/JkuvF
-    Calculates common settings needed for all models.
+      source: https://git.io/JkuvF
+      Calculates common settings needed for all models.
 
-  Args:
-    label_count: How many classes are to be recognized.
-    sample_rate: Number of audio samples per second.
-    clip_duration_ms: Length of each audio clip to be analyzed.
-    window_size_ms: Duration of frequency analysis window.
-    window_stride_ms: How far to move in time between frequency windows.
-    feature_bin_count: Number of frequency bins to use for analysis.
-    preprocess: How the spectrogram is processed to produce features.
+    Args:
+      label_count: How many classes are to be recognized.
+      sample_rate: Number of audio samples per second.
+      clip_duration_ms: Length of each audio clip to be analyzed.
+      window_size_ms: Duration of frequency analysis window.
+      window_stride_ms: How far to move in time between frequency windows.
+      feature_bin_count: Number of frequency bins to use for analysis.
+      preprocess: How the spectrogram is processed to produce features.
 
-  Returns:
-    Dictionary containing common settings.
+    Returns:
+      Dictionary containing common settings.
 
-  Raises:
-    ValueError: If the preprocessing mode isn't recognized.
-  """
+    Raises:
+      ValueError: If the preprocessing mode isn't recognized.
+    """
     desired_samples = int(sample_rate * clip_duration_ms / 1000)
     window_size_samples = int(sample_rate * window_size_ms / 1000)
     window_stride_samples = int(sample_rate * window_stride_ms / 1000)
@@ -233,7 +233,10 @@ class AudioDataset:
         background_samples = self.background_data[background_index, 0:wav_length]
 
         background_offset = self.gen.uniform(
-            [], 0, wav_length - desired_samples, dtype=tf.int32,
+            [],
+            0,
+            wav_length - desired_samples,
+            dtype=tf.int32,
         )
         background_clipped = background_samples[
             background_offset : (background_offset + desired_samples)

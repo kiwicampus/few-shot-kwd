@@ -96,7 +96,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="labeler for listening data")
     parser.add_argument("datadir", help="directory of closest/farthest data")
     parser.add_argument("word", help="word to analyze")
-    parser.add_argument('--dryrun', action="store_true", help="do not write to output csv file")
+    parser.add_argument(
+        "--dryrun", action="store_true", help="do not write to output csv file"
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--closest", action="store_true", help="Mode: CLOSEST")
     group.add_argument("-f", "--farthest", action="store_true", help="Mode: FARTHEST")

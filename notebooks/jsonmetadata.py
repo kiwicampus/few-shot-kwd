@@ -24,11 +24,12 @@ l2i = { "German": "de", "English": "en", "French": "fr", "Catalan": "ca", "Kinya
 print(len(l2i))
 # fmt:on
 
-i2l = {v:k for k,v in l2i.items()}
+i2l = {v: k for k, v in l2i.items()}
 print(i2l)
 
 # %%
 basedir = Path("/mnt/disks/std3/opus/generated/common_voice/frequent_words")
+
 
 def metadata_lang(code_mdict):
     code, metadata = code_mdict
@@ -59,10 +60,12 @@ with multiprocessing.Pool() as pool:
         for _ in pool.imap_unordered(metadata_lang, to_process):
             pass
 
-        print('complete')
+        print("complete")
         json_metadata = metadata.copy()
-        json_metadata["version"] = "version 1.0, Multilingual Spoken Words Corpus, https://mlcommons.org/en/multilingual-spoken-words"
-        with open("metadata.json", 'w') as fh:
+        json_metadata[
+            "version"
+        ] = "version 1.0, Multilingual Spoken Words Corpus, https://mlcommons.org/en/multilingual-spoken-words"
+        with open("metadata.json", "w") as fh:
             json.dump(json_metadata, fh)
 
 # %%

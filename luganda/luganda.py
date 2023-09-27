@@ -1,4 +1,4 @@
-#%%
+# %%
 from dataclasses import asdict
 import os
 import glob
@@ -42,13 +42,13 @@ counts = word_extraction.wordcounts(l_csv, skip_header=True, transcript_column=2
 
 # %%
 words = os.listdir(Path.home() / "tinyspeech_harvard/luganda/covid_keyword_utterances")
-words.append('covid')
+words.append("covid")
 cs = []
 for w in words:
     cs.append((w, counts[w]))
 cs.sort(key=lambda c: c[1], reverse=True)
 cs[:20]
-#%%
+# %%
 
 
 # %%
@@ -872,7 +872,6 @@ with open(workdir / "akawuka_analysis.csv", "w") as fh:
 detections_dest = workdir / "akawuka_detections"
 source = workdir / "akawuka_stream.wav"
 for ix, detection_ms in enumerate([d[1] for d in found_words]):
-
     dest = detections_dest / f"detection_{ix:03d}_{detection_ms}_ms.wav"
     transformer = sox.Transformer()
     transformer.convert(samplerate=16000)  # from 48K mp3s

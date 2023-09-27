@@ -91,7 +91,6 @@ def label_hf(datadir: os.PathLike, keyword: str, csv_outdir: os.PathLike):
 
 
 def label(args):
-
     already_listened = []
     if os.path.isfile(args.out_csv):
         previous_file = Path(args.out_csv)

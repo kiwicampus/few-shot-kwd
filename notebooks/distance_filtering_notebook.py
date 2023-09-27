@@ -100,14 +100,19 @@ for ix, (f, dist) in enumerate(list(zip(sorted_clips, distances))):
     pydub.playback.play(wav)
 
 # %%
-ds = sorted(os.listdir(Path.home() / "tinyspeech_harvard/distance_sorting/closest_farthest"), key=lambda x:len(x))
+ds = sorted(
+    os.listdir(Path.home() / "tinyspeech_harvard/distance_sorting/closest_farthest"),
+    key=lambda x: len(x),
+)
 for d in ds:
     print(d)
 
 # %%
-N_CLUSTERS=5
+N_CLUSTERS = 5
 print("# CLUSTERS ", N_CLUSTERS)
-dest_dir = Path.home() / "tinyspeech_harvard/distance_sorting/morelangs/closest_farthest_de"
+dest_dir = (
+    Path.home() / "tinyspeech_harvard/distance_sorting/morelangs/closest_farthest_de"
+)
 for word in os.listdir(words_dir):
     print("\n--- ", word)
     clips = glob.glob(str(words_dir / word / "*.wav"))
@@ -124,11 +129,11 @@ for word in os.listdir(words_dir):
     for c in closest:
         shutil.copy2(c, closest_dir)
     closest_csv = closest_dir / f"{word}_closest_50_input.csv"
-    with open(closest_csv, 'w') as fh:
+    with open(closest_csv, "w") as fh:
         distances = results["distances"][:50]
         writer = csv.writer(fh)
-        for f,d in zip(closest, distances):
-            writer.writerow([Path(f).name,d])
+        for f, d in zip(closest, distances):
+            writer.writerow([Path(f).name, d])
 
     farthest_dir = dest_dir / word / "farthest"
     os.makedirs(farthest_dir)
@@ -136,17 +141,17 @@ for word in os.listdir(words_dir):
         shutil.copy2(f, farthest_dir)
 
     farthest_csv = farthest_dir / f"{word}_farthest_50_input.csv"
-    with open(farthest_csv, 'w') as fh:
+    with open(farthest_csv, "w") as fh:
         distances = results["distances"][-50:]
         writer = csv.writer(fh)
-        for f,d in zip(farthest, distances):
-            writer.writerow([Path(f).name,d])
+        for f, d in zip(farthest, distances):
+            writer.writerow([Path(f).name, d])
 print("done")
 
 # %%
 # record the training clips and the distances to the evaluation clips for GSC/MSC comparisons
-N_CLUSTERS=3
-N_TRAIN=100
+N_CLUSTERS = 3
+N_TRAIN = 100
 print("# CLUSTERS ", N_CLUSTERS, "# TRAIN", N_TRAIN)
 word2distances = {}
 gsc_msc_dir = Path.home() / "tinyspeech_harvard/distance_sorting/gsc_msc/"
@@ -158,34 +163,36 @@ for word in ["left", "right", "down", "off", "yes"]:
     wavs = glob.glob(str(gsc_msc_dir / word / "*.wav"))
     print(word, len(wavs))
 
-    results = distance_filtering.cluster_and_sort(wavs, em, n_train=N_TRAIN, n_clusters=N_CLUSTERS)
+    results = distance_filtering.cluster_and_sort(
+        wavs, em, n_train=N_TRAIN, n_clusters=N_CLUSTERS
+    )
     sorted_clips = results["sorted_clips"]
     distances = results["distances"]
     train_clips = results["train_clips"]
 
     d_csv = output_loc / f"{word}_distances.csv"
     t_csv = output_loc / f"{word}_trainset.csv"
-    with open(d_csv, 'w') as fh:
+    with open(d_csv, "w") as fh:
         writer = csv.writer(fh)
-        for c,d in zip(sorted_clips, distances):
+        for c, d in zip(sorted_clips, distances):
             writer.writerow([Path(c).name, d])
-    with open(t_csv, 'w') as fh:
+    with open(t_csv, "w") as fh:
         writer = csv.writer(fh)
         for t in train_clips:
             writer.writerow([Path(t).name])
     word2distances[word] = distances
-print('done')
+print("done")
 
 # %%
 word = "right"
-sorted_clips=[]
-with open(output_loc / f"{word}_distances.csv", 'r') as fh:
+sorted_clips = []
+with open(output_loc / f"{word}_distances.csv", "r") as fh:
     reader = csv.reader(fh)
     for row in reader:
         p = gsc_msc_dir / word / row[0]
         sorted_clips.append((p, float(row[1])))
-good_clips=enumerate(sorted_clips)
-bad_clips=enumerate(reversed(sorted_clips))
+good_clips = enumerate(sorted_clips)
+bad_clips = enumerate(reversed(sorted_clips))
 for ix, (f, dist) in bad_clips:
     # if ix < 4000 :
     #     continue
@@ -276,6 +283,7 @@ for ix, c in enumerate(bad_clips):
     print(ix, c)
     pydub.playback.play(wav)
 
+
 # %%
 def play(c):
     clip = en_words_dir / "story" / c
@@ -342,6 +350,7 @@ all_clips_f
 # %%
 play(bad_clips[3])
 # all
+
 
 # %%
 def get_bad(fpath):

@@ -1,4 +1,4 @@
-#%%
+# %%
 from dataclasses import dataclass
 from typing import List
 import multiprocessing
@@ -42,7 +42,7 @@ def which_set(filename, validation_percentage, testing_percentage):
     """from  https://git.io/JRRKW"""
     base_name = os.path.basename(filename)
     hash_name = re.sub(r"_nohash_.*$", "", base_name)
-    MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
+    MAX_NUM_WAVS_PER_CLASS = 2**27 - 1  # ~134M
     hash_name_hashed = hashlib.sha1(compat.as_bytes(hash_name)).hexdigest()
     percentage_hash = (int(hash_name_hashed, 16) % (MAX_NUM_WAVS_PER_CLASS + 1)) * (
         100.0 / MAX_NUM_WAVS_PER_CLASS
@@ -62,7 +62,8 @@ def which_set(filename, validation_percentage, testing_percentage):
 # cv_keyword_data.sort()
 # print("CV:", len(cv_keyword_data))
 
-#%%
+
+# %%
 def train(train_files, val_files, model_settings, verbose=0):
     embedding_model_dir = Path.home() / "tinyspeech_harvard/multilingual_embedding_wc"
     unknown_files = []
@@ -304,7 +305,13 @@ for keyword in ["left", "right", "off", "down", "yes"]:
             unknown_cross=gsc_unknown,
             verbose=verbose,
         )
-        p = multiprocessing.Process(target=cross_compare, args=(cc_cv2gsc, q,))
+        p = multiprocessing.Process(
+            target=cross_compare,
+            args=(
+                cc_cv2gsc,
+                q,
+            ),
+        )
         p.start()
         p.join()
         cv2cv_test_acc, cv2gsc_cross_acc = q.get()
@@ -320,7 +327,13 @@ for keyword in ["left", "right", "off", "down", "yes"]:
             unknown_cross=cv_other,
             verbose=verbose,
         )
-        p = multiprocessing.Process(target=cross_compare, args=(cc_gsc2cv, q,))
+        p = multiprocessing.Process(
+            target=cross_compare,
+            args=(
+                cc_gsc2cv,
+                q,
+            ),
+        )
         p.start()
         p.join()
         gsc2gsc_test_acc, gsc2cv_cross_acc = q.get()
@@ -381,4 +394,3 @@ print(np.std(tests, axis=0))
 
 # # estimate unknown accuracy (w fixed seed for now)
 # unknown_files = np.random.RandomState(123).choice(gsc_unknown, 1000, replace=False)
-

@@ -21,7 +21,7 @@ import functools
 
 def wordcounts(csvpath, skip_header=True, transcript_column=2):
     """count the frequencies of all words in a csv produced by
-        https://github.com/mozilla/DeepSpeech/blob/master/bin/import_cv2.py
+    https://github.com/mozilla/DeepSpeech/blob/master/bin/import_cv2.py
     """
     all_frequencies = Counter()
     with open(csvpath, "r") as fh:
@@ -130,16 +130,18 @@ def random_non_target_sentences(
     lang_isocode="en",
     alignment_basedir="/home/mark/tinyspeech_harvard/common-voice-forced-alignments/",
 ):
-    """ returns a list of mp3names (no extension) """
+    """returns a list of mp3names (no extension)"""
     # common voice csv from DeepSpeech/import_cv2.py
     csvpath = pathlib.Path(alignment_basedir) / lang_isocode / "validated.csv"
     # load csv in-memory https://stackoverflow.com/a/17767445
     with open(csvpath, "r") as fh:
         csvdata = fh.read()
     lines = csvdata.splitlines()
-    if len(lines) - 1 < num_sentences: # skip header
+    if len(lines) - 1 < num_sentences:  # skip header
         raise ValueError("not enough data in csv")
-    rand_indices = set(np.random.choice(range(len(lines) - 1), num_sentences, replace=False))
+    rand_indices = set(
+        np.random.choice(range(len(lines) - 1), num_sentences, replace=False)
+    )
     reader = csv.reader(lines)
     next(reader)  # skip header
     selected = []
@@ -151,19 +153,18 @@ def random_non_target_sentences(
         usable = True
         for word in words:
             if word in words_to_exclude:
-                usable=False
+                usable = False
                 break
         if not usable:
-            rand_indices.add(ix + 1) # try next row
+            rand_indices.add(ix + 1)  # try next row
             continue
         selected.append(mp3name_no_extension)
     return selected
 
 
-
 def full_transcription_timings(textgrid_path):
     """[(word, start, end)] for a full textgrid
-        note: word often will be blank, denoting pauses
+    note: word often will be blank, denoting pauses
     """
     tg = textgrid.TextGrid.fromFile(textgrid_path)
     word_timings = []
@@ -207,7 +208,7 @@ def extract_shot_from_mp3(
     duration = sox.file_info.duration(mp3path)
     if end_s - start_s < 1 and not include_context:
         pad_amt_s = (1.0 - (end_s - start_s)) / 2.0
-    else:  
+    else:
         # either (a) utterance is longer than 1s, trim instead of pad
         # or (b) include 1s of context
         start_s, end_s = extract_one_second(duration, start_s, end_s)

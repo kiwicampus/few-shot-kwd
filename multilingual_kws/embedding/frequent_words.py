@@ -1,4 +1,4 @@
-#%%
+# %%
 import numpy as np
 import os
 import shutil
@@ -27,7 +27,7 @@ sns.set()
 sns.set_palette("bright")
 # sns.set(font_scale=1.6)
 
-#%%
+# %%
 # how large is each language?
 langs = {}
 alignments = Path("/home/mark/tinyspeech_harvard/common-voice-forced-alignments")

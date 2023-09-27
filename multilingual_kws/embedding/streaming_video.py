@@ -1,4 +1,4 @@
-#%%
+# %%
 import datetime
 import cv2 as cv
 import numpy as np
@@ -13,7 +13,7 @@ import sys
 
 from accuracy_utils import StreamingAccuracyStats
 
-#%%
+# %%
 
 
 def make_frame(words_times, detections, clip_inferences, threshold):
@@ -75,7 +75,11 @@ def make_frame(words_times, detections, clip_inferences, threshold):
                 continue
             # within detection window
             cv.rectangle(
-                frame, pt1=top_left, pt2=bottom_right, color=(0, 255, 0), thickness=-1,
+                frame,
+                pt1=top_left,
+                pt2=bottom_right,
+                color=(0, 255, 0),
+                thickness=-1,
             )
             wordcolor = (0, 0, 0)
             det_score = d["smoothed_score"]
@@ -127,7 +131,10 @@ def make_frame(words_times, detections, clip_inferences, threshold):
                 start_scores_left_border,
                 start_scores_height_px + ix * score_height_px,
             ),
-            pt2=(start_scores_left_border + category_width_px, label_bottom,),
+            pt2=(
+                start_scores_left_border + category_width_px,
+                label_bottom,
+            ),
             color=(200, 200, 200),
             thickness=-1,
         )
@@ -148,7 +155,10 @@ def make_frame(words_times, detections, clip_inferences, threshold):
         score_top = start_scores_height_px + ix * score_height_px
         cv.rectangle(
             frame,
-            pt1=(score_left, score_top,),
+            pt1=(
+                score_left,
+                score_top,
+            ),
             pt2=(score_left + score_bg_width, label_bottom),
             color=(255, 255, 255),
             thickness=-1,
@@ -166,7 +176,7 @@ def make_frame(words_times, detections, clip_inferences, threshold):
     return frame
 
 
-#clip_inferences = dict(silence=0.023, unknown=0.4, merchant=0.8)
+# clip_inferences = dict(silence=0.023, unknown=0.4, merchant=0.8)
 clip_inferences = dict()
 
 # detections = {
@@ -191,9 +201,9 @@ fig, ax = plt.subplots()
 ax.imshow(frame)
 fig.set_size_inches(20, 20)
 
-#%%
+# %%
 
-#fmt: off
+# fmt: off
 #video_dir = Path("/home/mark/tinyspeech_harvard/merchant_video/")
 #transcription_file = "/home/mark/tinyspeech_harvard/merchant_video/full_transcription.pkl"
 #wav_file = "/home/mark/tinyspeech_harvard/merchant_video/stream.wav"
@@ -202,7 +212,7 @@ target_word = "iaith"
 video_dir = Path("/home/mark/tinyspeech_harvard/streaming_sentence_experiments/") / target_word
 transcription_file = video_dir / "full_transcription.pkl"
 wav_file = video_dir / "stream.wav"
-#fmt: on
+# fmt: on
 
 frames_dir = video_dir / "frames"
 assert os.path.isdir(frames_dir), "no frames dir"
@@ -227,10 +237,10 @@ print(threshold)
 
 raw_inferences = np.load(video_dir / "raw_inferences.npy")
 print(raw_inferences.shape)
-#%%
+# %%
 
 
-#%%
+# %%
 
 
 def get_words(transcription, last_ix, frame_time_s):
@@ -283,7 +293,7 @@ found_times_s_scores = [
 last_ix_transcriptions = 0
 last_ix_found = 0
 score_ix = 0
-enable_raw_scores=False
+enable_raw_scores = False
 
 for frame_ix in range(num_frames):
     if frame_ix % (num_frames // 100) == 0:
@@ -315,12 +325,12 @@ for frame_ix in range(num_frames):
     cv.imwrite(frame_name, frame)
 
 
-#%%
+# %%
 # in frames dir (https://stackoverflow.com/questions/13041061/mix-audio-video-of-different-lengths-with-ffmpeg)
 # ffmpeg -framerate 50 -pattern_type glob -i '*.jpg' -i ../stream.wav -shortest -c:v libx264 -pix_fmt yuv420p ../out.mp4
 
 
-#%%
+# %%
 # fmt: off
 n_inferences = 60888
 data_samples = 19499904
@@ -344,5 +354,4 @@ print("true fps == samples per second / clip stride samples", 16000/320)
 # seconds per stride * (16000 samples / second) ->  samples per stride
 # fmt: on
 
-#%%
-
+# %%

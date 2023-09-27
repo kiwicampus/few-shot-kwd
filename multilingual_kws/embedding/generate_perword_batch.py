@@ -1,5 +1,4 @@
-
-#%%
+# %%
 import numpy as np
 import os
 import glob
@@ -34,8 +33,9 @@ BKGD=/home/mark/tinyspeech_harvard/speech_commands/_background_noise_
 #  --word_gap_ms=40000 \
 """
 
+
 def make_script(idx, total, target_word, target_lang, dest):
-    script=f"""
+    script = f"""
 
 echo +++++++++++++++++++++++GENERATING {target_word} -  {idx} of {total}
 DATA=/home/mark/tinyspeech_harvard/frequent_words/{target_lang}/clips/
@@ -51,7 +51,9 @@ date
 
 """
     return script
-#%%
+
+
+# %%
 
 # fmt: off
 paper_data = Path("/home/mark/tinyspeech_harvard/paper_data")
@@ -86,27 +88,27 @@ for multiclass_lang in os.listdir(multilang_results_dir):
         # target_word_counts[f"{lang_isocode}_{target_word}"] = num_wavs
         d = (lang_isocode, target_word, model_file)
         target_data.append(d)
-#print(len(target_word_counts.keys()))
+# print(len(target_word_counts.keys()))
 # fmt: on
 
-#%%
-#perword_pkl  = paper_data / "data_streaming_perword.pkl"
-perword_pkl  = paper_data / "data_ooe_streaming_perword.pkl"
+# %%
+# perword_pkl  = paper_data / "data_streaming_perword.pkl"
+perword_pkl = paper_data / "data_ooe_streaming_perword.pkl"
 assert not os.path.exists(perword_pkl), "already there"
-with open(perword_pkl, 'wb') as fh:
+with open(perword_pkl, "wb") as fh:
     pickle.dump(target_data, fh)
-#%%
+# %%
 
 # for ix, (lang_isocode, target_word, model_file) in enumerate(target_data):
 #     print(ix)
 #     print(shlex.quote(target_word))
 
-#%%
+# %%
 # script to generate wavs for existing models
 n_words = len(target_data)
-#base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/streaming_batch_perword")
+# base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/streaming_batch_perword")
 base_dir = Path("/home/mark/tinyspeech_harvard/paper_data/ooe_streaming_batch_perword")
-#frequent_words = Path("/home/mark/tinyspeech_harvard/frequent_words")
+# frequent_words = Path("/home/mark/tinyspeech_harvard/frequent_words")
 script_commands = []
 for ix, (lang_isocode, target_word, model_file) in enumerate(target_data):
     # where to write the wavs
@@ -121,17 +123,25 @@ for ix, (lang_isocode, target_word, model_file) in enumerate(target_data):
     shutil.copytree(model_file, model_dir / model_name)
 
     # need to escape words with apostrophes in them, and their directories too:
-    script_commands.append(make_script(ix, n_words, shlex.quote(target_word), lang_isocode, shlex.quote(str(dest_dir))))
+    script_commands.append(
+        make_script(
+            ix,
+            n_words,
+            shlex.quote(target_word),
+            lang_isocode,
+            shlex.quote(str(dest_dir)),
+        )
+    )
 
-#script_genfile = base_dir / "data_ine_streaming_perword.sh"
+# script_genfile = base_dir / "data_ine_streaming_perword.sh"
 script_genfile = base_dir / "data_ooe_streaming_perword.sh"
 assert not os.path.exists(script_genfile), "already exists"
-with open(script_genfile, 'w') as fh:
+with open(script_genfile, "w") as fh:
     fh.write(preamble + "\n".join(script_commands))
 
-#%%
+# %%
 
-#%%
+# %%
 ######################
 ############
 # generate new data

@@ -31,7 +31,7 @@ def generate_microset(
         These files were generated via the following commands:
           cv-corpus-7.0-singleword/en/clips > mozilla_swts_en.txt
           cv-corpus-7.0-singleword/es/clips > mozilla_swts_es.txt
-          
+
     """
     with open(swts_mp3s_to_filter, "r") as fh:
         mp3s = fh.read().split()

@@ -1,4 +1,4 @@
-#%%
+# %%
 from dataclasses import asdict, field, dataclass
 import os
 import glob
@@ -53,6 +53,7 @@ with open(l_csv, "r") as fh:
                 kwcount[w] += 1
 pprint.pprint(kwcount)
 print("num lines", ix)
+
 
 # %%
 @dataclass
