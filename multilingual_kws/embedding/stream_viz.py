@@ -19,7 +19,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 import sox
-from keyword_detection.few-shot.multilingual_kws.embedding.accuracy_utils import StreamingAccuracyStats
+from multilingual_kws.embedding.accuracy_utils import StreamingAccuracyStats
 from batch_streaming_analysis import StreamTarget
 from batch_transfer_learn_streaming import TLData
 from single_target_recognize_commands import (
