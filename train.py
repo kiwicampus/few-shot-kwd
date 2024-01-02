@@ -33,9 +33,16 @@ logger = logging.getLogger(__name__)
 file_path = Path(__file__)
 data_dir = file_path.parent.parent.parent / "data/keyword_dataset"
 
+
 def main(
     toy: bool,
 ) -> None:
+    """
+    Main function for training the few-shot keyword detection model.
+
+    Args:
+        toy: Whether to use a toy dataset for training.
+    """
     # Using subprocess to call ls command and save the output in list format
 
     original_keyword_examples = (
@@ -173,11 +180,13 @@ def main(
     print(f"Founded {len(negative_files)} negative files")
 
     # Convert the obtained URIs to local path
-    external_dataset_path = data_dir / "external/"
+    external_dataset_path = data_dir / "external"
+    external_dataset_path_str = str(external_dataset_path)
+
     negative_files = [
         f.replace(
-            "gs://autonomy-vision/audios/external-datasets/",
-            external_dataset_path,
+            "gs://autonomy-vision/audios/external-datasets",
+            external_dataset_path_str,
         )
         for f in negative_files
     ]
@@ -186,17 +195,23 @@ def main(
     positive_files = [Path(f) for f in positive_files]
     negative_files = [Path(f) for f in negative_files]
 
-    model_dir = file_path.parent.parent.parent / "models/kwd"
-    base_model = tf.keras.models.load_model(model_dir)
-    embedding = tf.keras.models.Model(
-        name="embedding_model",
-        inputs=base_model.inputs,
-        outputs=base_model.get_layer(name="dense_2").output,
-    )
-    embedding.trainable = False
+    if toy:
+        print(" --- Using toy dataset ---")
+        positive_files = positive_files[:200]
+        negative_files = negative_files[:2000]
+
+    model_dir = file_path.parent.parent.parent / "models" / "kwd" / "embedding_model"
+    # base_model = tf.keras.models.load_model(model_dir)
+    # embedding = tf.keras.models.Model(
+    #     name="embedding_model",
+    #     inputs=base_model.inputs,
+    #     outputs=base_model.get_layer(name="dense_2").output,
+    # )
+    # embedding.trainable = False
 
     # Prepare data
     negative_files_str = [str(path) for path in negative_files]
+
     # Split the list of files into train, validation, and test sets
     train_negatives, test_negatives = train_test_split(
         negative_files_str, test_size=0.1, random_state=42
@@ -227,30 +242,37 @@ def main(
     # Prepare the model
     model_settings = standard_microspeech_model_settings(3)
 
+    if toy:
+        num_epochs = 1
+        num_batches = 1
+        backprop_into_embedding = False
+    else:
+        num_epochs = 10
+        num_batches = 2
+        backprop_into_embedding = True
+
     print("---Training model---")
     _, model, _ = transfer_learn(
         target="hey_kiwibot",
         train_files=train_samples,
         val_files=valid_samples,
         unknown_files=train_negatives,
-        num_epochs=10,
-        num_batches=2,
+        num_epochs=num_epochs,
+        num_batches=num_batches,
         batch_size=64,
         primary_lr=0.001,
-        backprop_into_embedding=True,
+        backprop_into_embedding=backprop_into_embedding,
         embedding_lr=0.0005,
         model_settings=model_settings,
-        base_model_path="/home/ai-robotics/Documents/Kiwibot/tamagotchi/models/kwd/hey_kiwibot_5shot",
+        base_model_path=model_dir,
         base_model_output="dense_2",
-        UNKNOWN_PERCENTAGE=75.0,
+        UNKNOWN_PERCENTAGE=50.0,
         bg_datadir=background_noise,
-        csvlog_dest="/home/ai-robotics/Documents/Kiwibot/tamagotchi/keyword_detection/few-shot/history.csv",
-        continue_training=True,
+        csvlog_dest=str(model_dir.parent / "training_log.csv"),
+        continue_training=False,
     )
-    KEYWORD = "hey_kiwibot"
-    model.save(
-        f"/home/ai-robotics/Documents/Kiwibot/tamagotchi/models/{KEYWORD}_15shot"
-    )
+
+    model.save(model_dir.parent / "finetuned_model")
 
     test_spectrograms = np.array([file2spec(model_settings, f) for f in test_samples])
     # fetch softmax predictions from the finetuned model:
@@ -265,7 +287,7 @@ def main(
     print(f"Test accuracy on testset positive: {accuracy:0.2f}")
 
     test_spectrograms = np.array(
-        [file2spec(model_settings, f) for f in test_negatives[:100]]
+        [file2spec(model_settings, f) for f in test_negatives[:1000]]
     )
     predictions = model.predict(test_spectrograms)
     categorical_predictions = np.argmax(predictions, axis=1)
