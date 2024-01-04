@@ -30,6 +30,7 @@ def transfer_learn(
     csvlog_dest: Optional[os.PathLike] = None,
     continue_training: bool = False,
     verbose=1,
+    categories: int = 2,  # other + target_keyword
 ):
     """this only words for single-target models: see audio_dataset and CATEGORIES"""
     tf.get_logger().setLevel(logging.ERROR)
@@ -47,13 +48,13 @@ def transfer_learn(
         xfer.trainable = False
 
         # dont use softmax unless losses from_logits=False
-        CATEGORIES = 2  # other + target_keyword
-        tf.get_logger().info(f"NUmber of categories {CATEGORIES}")
+        tf.get_logger().info(f"NUmber of categories {categories}")
+
         xfer = tf.keras.models.Sequential(
             [
                 xfer,
                 tf.keras.layers.Dense(units=18, activation="tanh"),
-                tf.keras.layers.Dense(units=CATEGORIES, activation="softmax"),
+                tf.keras.layers.Dense(units=categories, activation="softmax"),
             ]
         )
 

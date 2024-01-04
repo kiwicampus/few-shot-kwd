@@ -7,9 +7,9 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
-import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from typer import Typer, run
 
@@ -35,16 +35,29 @@ data_dir = file_path.parent.parent.parent / "data/keyword_dataset"
 
 
 def main(
-    toy: bool,
+    toy: Optional[bool] = True,
+    num_epochs: Optional[int] = 1,
+    num_batches: Optional[int] = 1,
+    backprop_into_embedding: Optional[bool] = False,
+    unknown_percentage: Optional[float] = 50.0,
 ) -> None:
     """
     Main function for training the few-shot keyword detection model.
 
     Args:
-        toy: Whether to use a toy dataset for training.
+        toy (Optional[bool]): Whether to use a toy dataset for training.
+        num_epochs (Optional[int]): Number of epochs to train the model.
+        num_batches (Optional[int]): Number of batches to train the model.
+        backprop_into_embedding (Optional[bool]): Whether to backpropagate into the
+            embedding model.
+        unknown_percentage (Optional[float]): Percentage of unknown samples to use
+            for training.
     """
+    print(f" --- Starting training, using toy as {toy} ---")
+
     # Using subprocess to call ls command and save the output in list format
 
+    # Original keyword examples are the ones recorded by the bot on field
     original_keyword_examples = (
         subprocess.check_output(
             [
@@ -59,6 +72,10 @@ def main(
         .decode("utf-8")
         .split("\n")
     )
+    # Crawling keyword examples are the examples taken and curated from the data
+    # crawling process, these took max 15 audios per person and set the file to the
+    # the correct format
+
     crawling_keyword_examples = (
         subprocess.check_output(
             [
@@ -73,6 +90,9 @@ def main(
         .decode("utf-8")
         .split("\n")
     )
+
+    # Synthetic keyword examples are the ones generated synthetically from the
+    # using Suno generative model
     synthetic_keyword_examples = (
         subprocess.check_output(
             [
@@ -87,6 +107,9 @@ def main(
         .decode("utf-8")
         .split("\n")
     )
+
+    # Other keyword examples are the ones taken on the field by the bot using the ability to record
+    # the audio that it classifies as other, these are curated to select only the true positives
     other_keyword_examples = (
         subprocess.check_output(
             [
@@ -113,6 +136,8 @@ def main(
     positive_files.remove("")
     print(f"Founded {len(positive_files)} positive files")
 
+    # Negative keyword examples are the ones taken on the field by the bot using the ability to record
+    # the audio that it classifies as other, these are curated to select only the false positives
     negative_keyword_examples = (
         subprocess.check_output(
             [
@@ -127,6 +152,9 @@ def main(
         .decode("utf-8")
         .split("\n")
     )
+
+    # Away negative keyword examples are the ones taken on the field by the bot using the ability to record continously
+    # conversations, these are separated into 1-second chunks and convert to the correct format
     away_negative_keyword_examples = (
         subprocess.check_output(
             [
@@ -144,6 +172,7 @@ def main(
     # Call gsutil ls command to get all files in the bucket, this is done because call them
     # with find command is too slow
 
+    # The google speech command benchmark dataset is used as negative examples
     google_dataset = (
         subprocess.check_output(
             [
@@ -155,6 +184,9 @@ def main(
         .decode("utf-8")
         .split("\n")
     )
+
+    # The mswc dataset is also used as negative examples, we just donwload part of the data of english,
+    # spanish and french speakers
     mswc = (
         subprocess.check_output(
             [
@@ -222,7 +254,7 @@ def main(
     print(f"Number of test negative files: {len(test_negatives)}")
 
     # TODO: Change this split with one that takes into account the origin
-    # of the recordings (the bot, synthetic, etc.)
+    # of the recordings (the bot, synthetic, etc.) and to avoid data leakage
     positive_files_str = [str(path) for path in positive_files]
     # Split the list of files into train, validation, and test sets
     train_samples, test_samples = train_test_split(
@@ -242,14 +274,10 @@ def main(
     # Prepare the model
     model_settings = standard_microspeech_model_settings(3)
 
-    if toy:
-        num_epochs = 1
-        num_batches = 1
-        backprop_into_embedding = False
-    else:
-        num_epochs = 10
-        num_batches = 2
-        backprop_into_embedding = True
+    # If training is not toy, the following parameters are recommended:
+    # num_epochs = 10
+    # num_batches = 2
+    # backprop_into_embedding = True
 
     print("---Training model---")
     _, model, _ = transfer_learn(
@@ -266,7 +294,7 @@ def main(
         model_settings=model_settings,
         base_model_path=model_dir,
         base_model_output="dense_2",
-        UNKNOWN_PERCENTAGE=50.0,
+        UNKNOWN_PERCENTAGE=unknown_percentage,
         bg_datadir=background_noise,
         csvlog_dest=str(model_dir.parent / "training_log.csv"),
         continue_training=False,
@@ -276,7 +304,7 @@ def main(
 
     test_spectrograms = np.array([file2spec(model_settings, f) for f in test_samples])
     # fetch softmax predictions from the finetuned model:
-    # (class 0: silence/background noise, class 1: unknown keyword, class 2: target)
+    # (class 0: other, class 1: target)
     predictions = model.predict(test_spectrograms)
     categorical_predictions = np.argmax(predictions, axis=1)
     # which predictions match the target class?
