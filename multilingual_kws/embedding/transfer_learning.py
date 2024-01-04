@@ -28,36 +28,41 @@ def transfer_learn(
     UNKNOWN_PERCENTAGE: float = 50.0,
     bg_datadir: os.PathLike = "/home/mark/tinyspeech_harvard/speech_commands/_background_noise_/",
     csvlog_dest: Optional[os.PathLike] = None,
+    continue_training: bool = False,
     verbose=1,
+    categories: int = 2,  # other + target_keyword
 ):
     """this only words for single-target models: see audio_dataset and CATEGORIES"""
-
     tf.get_logger().setLevel(logging.ERROR)
     base_model = tf.keras.models.load_model(base_model_path)
     tf.get_logger().setLevel(logging.INFO)
-    xfer = tf.keras.models.Model(
-        name="TransferLearnedModel",
-        inputs=base_model.inputs,
-        outputs=base_model.get_layer(name=base_model_output).output,
-    )
-    xfer.trainable = False
 
-    # dont use softmax unless losses from_logits=False
-    CATEGORIES = 3  # silence + unknown + target_keyword
-    xfer = tf.keras.models.Sequential(
-        [
-            xfer,
-            tf.keras.layers.Dense(units=18, activation="tanh"),
-            tf.keras.layers.Dense(units=CATEGORIES, activation="softmax"),
-        ]
-    )
+    if continue_training:
+        xfer = tf.keras.models.load_model(base_model_path)
+    else:
+        xfer = tf.keras.models.Model(
+            name="TransferLearnedModel",
+            inputs=base_model.inputs,
+            outputs=base_model.get_layer(name=base_model_output).output,
+        )
+        xfer.trainable = False
+
+        # dont use softmax unless losses from_logits=False
+        tf.get_logger().info(f"NUmber of categories {categories}")
+
+        xfer = tf.keras.models.Sequential(
+            [
+                xfer,
+                tf.keras.layers.Dense(units=18, activation="tanh"),
+                tf.keras.layers.Dense(units=categories, activation="softmax"),
+            ]
+        )
 
     xfer.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=primary_lr),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
         metrics=["accuracy"],
     )
-
     # TODO(mmaz): use keras class weights?
     audio_dataset = AudioDataset(
         model_settings=model_settings,
@@ -82,7 +87,7 @@ def transfer_learn(
         callbacks = [tf.keras.callbacks.CSVLogger(csvlog_dest, append=False)]
     else:
         callbacks = []
-
+    print("Number of training epochs: ", num_epochs)
     history = xfer.fit(
         train_ds,
         validation_data=val_ds,
