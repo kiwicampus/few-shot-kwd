@@ -215,7 +215,7 @@ class AudioDataset:
         time_shift_ms=100,
         background_frequency=0.8,
         background_volume_range=0.1,
-        silence_percentage=10.0,
+        silence_percentage=0,
         unknown_percentage=10.0,
         spec_aug_params=SpecAugParams(),
         seed=None,
